@@ -107,6 +107,7 @@ final class AiBriefGenerator
             'tone' => $input['tone'],
             'channels' => $input['channels'],
             'count' => 5,
+            'useKnowledgeBase' => true,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         $context = stream_context_create([
             'http' => [
