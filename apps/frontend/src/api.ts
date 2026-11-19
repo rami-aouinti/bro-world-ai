@@ -4,6 +4,7 @@ import type {
   Channel,
   ContentIdea,
   HandoffResponse,
+  IdeaGenerationResponse,
   WeeklyPlan,
 } from './types'
 
@@ -91,6 +92,18 @@ export const api = {
       body: JSON.stringify(payload),
     })
     return normalizeIdea(result)
+  },
+
+  generateIdeas(payload: {
+    campaign: string
+    audience: string
+    tone: string
+    channels: Channel[]
+  }): Promise<IdeaGenerationResponse> {
+    return request('/workflow/ai/ideas', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
   },
 
   createWeeklyPlan(payload: {
