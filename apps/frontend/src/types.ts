@@ -108,3 +108,20 @@ export interface ApiErrorBody {
   }>
   violations?: Array<{ field: string; message: string }>
 }
+
+
+export interface IdeaSuggestion {
+  title: string
+  topic: string
+  targetAudience: string
+  tone: string
+  channels: Channel[]
+}
+
+export interface IdeaGenerationResponse {
+  ideas: IdeaSuggestion[]
+  ai: {
+    provider: string
+    simulated: boolean
+  }
+}
