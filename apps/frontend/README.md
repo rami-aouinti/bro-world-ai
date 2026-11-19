@@ -47,7 +47,7 @@ The production assets are written to `dist/`.
 ## Implemented screens
 
 - **Overview:** idea, plan, review and handoff metrics; team capacity and recent ideas.
-- **Content ideas:** search, status filtering, idea creation and editing.
+- **Content ideas:** search, status filtering, manual idea creation, AI-generated five-idea suggestions and editing. AI suggestions are drafts; users choose which ones to save.
 - **Weekly plan:** choose five ideas, assign the first three as priorities and the final two as reserves, allocate Person A/B and validate capacity before saving.
 - **Review queue:** review and approved content.
 - **Content drawer:** edit the idea, generate and inspect the brief, channel variants, creative direction, effort estimate, submit for review, approve and create a simulated handoff.
@@ -57,6 +57,7 @@ The production assets are written to `dist/`.
 The frontend uses the Symfony API as its source of truth:
 
 - `GET/POST /api/content_ideas`
+- `POST /api/workflow/ai/ideas`
 - `POST /api/workflow/weekly-plans`
 - `GET /api/workflow/weekly-plans/{id}`
 - `POST /api/workflow/content-ideas/{id}/brief`
@@ -74,4 +75,4 @@ The current weekly plan ID is kept in browser local storage to reopen the active
 - Approval remains a human action and is bound to the exact brief version.
 - The handoff is simulated. It persists a backend payload but does not contact or publish to social networks.
 - Media references and booking URLs are placeholders; no media upload is implemented.
-- Analytics, ROI, moderation, RAG and n8n automations are not presented as implemented frontend features.
+- RAG ingestion and n8n orchestration are available through their documented service endpoints and workflow exports; they are not configured from the frontend. Analytics, ROI, comment moderation and real publishing remain out of scope.
