@@ -186,6 +186,15 @@ final class WorkflowController
         if ($mediaReference === '') {
             return $this->error('mediaReference is required before a brief can be reviewed or handed off.');
         }
+        $scheduledAtInput = trim((string) ($data['scheduledAt'] ?? ''));
+        if ($scheduledAtInput === '') {
+            return $this->error('scheduledAt is required because the schedule is part of the approval snapshot.');
+        }
+        try {
+            $scheduledAt = new \\DateTimeImmutable($scheduledAtInput);
+        } catch (\\Throwable) {
+            return $this->error('scheduledAt must be a valid date-time.');
+        }
 
         $channels = $idea->getChannels();
         $variants = [];
@@ -201,6 +210,8 @@ final class WorkflowController
 
         $payload = [
             'idea' => ['id' => $idea->getId(), 'title' => $idea->getTitle(), 'topic' => $idea->getTopic(), 'audience' => $idea->getTargetAudience(), 'tone' => $idea->getTone()],
+            'channels' => $channels,
+            'scheduledAt' => $scheduledAt->format(DATE_ATOM),
             'hook' => 'Du suchst eine Brille, die zu deinem Alltag passt?',
             'masterCopy' => $idea->getTopic() . '. Entdecke unsere Auswahl und lass dich persönlich beraten.',
             'productionPlan' => ['format' => 'Product photo or 15-second vertical video', 'steps' => ['Prepare product and location', 'Capture photo/video', 'Review accessibility and brand tone', 'Export channel variants']],
@@ -242,7 +253,10 @@ final class WorkflowController
         $idea = $this->findIdea($id);
         if ($idea instanceof JsonResponse) { return $idea; }
         if (!$this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea])) {
-            return $this->error('A complete brief with a media reference is required before review.');
+            return $this->error('A complete brief with a media reference and schedule is required before review.');
+        }
+        if (!$this->entityManager->getRepository(PlanSlot::class)->findOneBy(['contentIdea' => $idea])) {
+            return $this->error('Content must be assigned to a weekly plan before review.');
         }
         if (!in_array($idea->getStatus(), [ContentIdeaStatus::Draft, ContentIdeaStatus::ReadyForPlanning], true)) {
             return $this->error('Only draft or planned content can enter review.', 409);
@@ -282,9 +296,7 @@ final class WorkflowController
     {
         $idea = $this->findIdea($id);
         if ($idea instanceof JsonResponse) { return $idea; }
-        $data = $this->body($request);
-        if ($data instanceof JsonResponse) { return $data; }
-        $key = trim((string) ($request->headers->get('Idempotency-Key') ?: ($data['idempotencyKey'] ?? '')));
+        $key = trim((string) $request->headers->get('Idempotency-Key'));
         if ($key === '' || strlen($key) > 128) {
             return $this->error('Provide an Idempotency-Key header (max 128 characters).');
         }
@@ -299,6 +311,9 @@ final class WorkflowController
         if ($idea->getStatus() !== ContentIdeaStatus::Approved) {
             return $this->error('Only explicitly approved content can be handed off.', 409);
         }
+        if (!$this->entityManager->getRepository(PlanSlot::class)->findOneBy(['contentIdea' => $idea])) {
+            return $this->error('Content must have a complete weekly-plan assignment before handoff.', 409);
+        }
         $brief = $this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea]);
         $approval = $this->entityManager->getRepository(ContentApproval::class)->findOneBy(['contentIdea' => $idea]);
         if (!$brief || empty($brief->getPayload()['visual']['mediaReference'])) {
@@ -312,7 +327,7 @@ final class WorkflowController
             'contentIdeaId' => $id,
             'versionHash' => $brief->getVersionHash(),
             'channels' => $idea->getChannels(),
-            'scheduledAt' => $data['scheduledAt'] ?? null,
+            'scheduledAt' => $brief->getPayload()['scheduledAt'],
             'mode' => 'simulated',
             'brief' => $brief->getPayload(),
         ];
