@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'content_approvals')]
+#[ORM\Table(name: 'content_approvals', uniqueConstraints: [new ORM\UniqueConstraint(name: 'uniq_content_approval_idea', columns: ['content_idea_id'])])]
 class ContentApproval
 {
     #[ORM\Id]
@@ -16,7 +16,7 @@ class ContentApproval
     private string $id;
 
     #[ORM\OneToOne(targetEntity: ContentIdea::class)]
-    #[ORM\JoinColumn(name: 'content_idea_id', nullable: false, unique: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'content_idea_id', nullable: false, onDelete: 'CASCADE')]
     private ContentIdea $contentIdea;
 
     #[ORM\Column(name: 'version_hash', length: 64)]
