@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'plan_slots')]
+#[ORM\Table(name: 'plan_slots', indexes: [new ORM\Index(name: 'idx_plan_slots_plan', columns: ['weekly_plan_id'])], uniqueConstraints: [new ORM\UniqueConstraint(name: 'uniq_plan_slot_idea', columns: ['content_idea_id'])])]
 class PlanSlot
 {
     #[ORM\Id]
@@ -20,7 +20,7 @@ class PlanSlot
     private WeeklyPlan $weeklyPlan;
 
     #[ORM\ManyToOne(targetEntity: ContentIdea::class)]
-    #[ORM\JoinColumn(name: 'content_idea_id', nullable: false, unique: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'content_idea_id', nullable: false, onDelete: 'CASCADE')]
     private ContentIdea $contentIdea;
 
     #[ORM\Column(name: 'slot_type', length: 20)]
