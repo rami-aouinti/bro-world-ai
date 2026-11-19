@@ -98,7 +98,7 @@ final class AiBriefGenerator
                 'channels' => $input['channels'],
             ], $suggestions);
 
-            return ['ideas' => $ideas, 'ai' => ['provider' => 'deterministic-backend-fallback', 'simulated' => true]];
+            return ['ideas' => $ideas, 'ai' => ['provider' => 'deterministic-backend-fallback', 'simulated' => true, 'knowledgeContextCount' => 0], 'knowledgeSources' => []];
         }
 
         $body = json_encode([
@@ -139,7 +139,8 @@ final class AiBriefGenerator
 
         return [
             'ideas' => $result['ideas'],
-            'ai' => ['provider' => $result['provider'] ?? 'unknown', 'simulated' => (bool) ($result['simulated'] ?? false)],
+            'ai' => ['provider' => $result['provider'] ?? 'unknown', 'simulated' => (bool) ($result['simulated'] ?? false), 'knowledgeContextCount' => (int) ($result['knowledgeContextCount'] ?? 0)],
+            'knowledgeSources' => $result['knowledgeSources'] ?? [],
         ];
     }
 
