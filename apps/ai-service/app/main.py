@@ -64,6 +64,7 @@ class IdeasRequest(BaseModel):
     tone: str = Field(default="friendly and personal", max_length=120)
     channels: list[Literal["instagram", "facebook", "tiktok", "linkedin"]] = Field(default_factory=lambda: ["instagram", "facebook"])
     count: int = Field(default=5, ge=5, le=5)
+    useKnowledgeBase: bool = True
 
 
 class KnowledgeRequest(BaseModel):
@@ -192,6 +193,10 @@ async def generate(payload: GenerateRequest) -> GenerateResponse:
 
 @app.post("/api/v1/ideas")
 async def generate_ideas(payload: IdeasRequest) -> dict:
+    retrieved: list[str] = []
+    if payload.useKnowledgeBase and settings.database_url:
+        result = await retrieve_knowledge(RetrieveRequest(query=f"{payload.campaign}. {payload.audience}", topK=5))
+        retrieved = [item["text"] for item in result["results"]]
     if settings.ai_provider == "mock":
         suggestions = [
             ("Sommer und Augenschutz", "Praktische Tipps zum Schutz der Augen an sonnigen Tagen"),
@@ -204,12 +209,14 @@ async def generate_ideas(payload: IdeasRequest) -> dict:
             {"title": title, "topic": topic, "targetAudience": payload.audience, "tone": payload.tone, "channels": payload.channels}
             for title, topic in suggestions
         ]
-        return {"ideas": ideas, "provider": "deterministic-mock", "simulated": True}
+        return {"ideas": ideas, "provider": "deterministic-mock", "simulated": True, "knowledgeContextCount": len(retrieved)}
     prompt = (
         "Return JSON only with an object containing an ideas array of exactly five objects. "
         "Each object must have title, topic, targetAudience, tone and channels. "
         "Do not invent facts, statistics, medical advice or product claims. "
-        f"Campaign: {payload.campaign}. Audience: {payload.audience}. Tone: {payload.tone}. Channels: {payload.channels}."
+        "Treat retrieved inspiration as fictional creative hypotheses, not verified trends or performance data. "
+        f"Campaign: {payload.campaign}. Audience: {payload.audience}. Tone: {payload.tone}. "
+        f"Channels: {payload.channels}. Supplied knowledge context: {retrieved}."
     )
     try:
         parsed = json.loads(await _ollama_generate(prompt))
@@ -218,7 +225,7 @@ async def generate_ideas(payload: IdeasRequest) -> dict:
             raise ValueError("Expected exactly five ideas")
     except (KeyError, TypeError, ValueError) as exc:
         raise HTTPException(status_code=502, detail="LLM returned an invalid five-idea structure") from exc
-    return {"ideas": ideas, "provider": f"ollama:{settings.ollama_model}", "simulated": False}
+    return {"ideas": ideas, "provider": f"ollama:{settings.ollama_model}", "simulated": False, "knowledgeContextCount": len(retrieved)}
 
 
 def _split_chunks(text: str, size: int = 900, overlap: int = 120) -> list[str]:
