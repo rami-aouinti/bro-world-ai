@@ -55,9 +55,7 @@
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ $json }}",
-        "options": {
-          "responseCode": 201
-        }
+        "options": {}
       }
     }
   ],
@@ -90,7 +88,7 @@
     "executionOrder": "v1",
     "timezone": "Europe/Berlin"
   },
-  "versionId": "1",
+  "versionId": "b8e9a2c4-8b0a-4d11-9b11-0b18d9f7a004",
   "meta": {
     "templateCredsSetupCompleted": true
   },
