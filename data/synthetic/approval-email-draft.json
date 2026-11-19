@@ -1,0 +1,8 @@
+{
+  "delivery": "not_sent",
+  "to": "reviewer@example.invalid",
+  "subject": "Content approval required: Summer eyewear awareness",
+  "body": "A social media content item is ready for human review. Please open the Bro World AI review queue, inspect the exact content version and approve it there if appropriate.",
+  "requiresHumanApproval": true,
+  "syntheticRecipient": true
+}
