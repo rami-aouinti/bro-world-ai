@@ -1,0 +1,17 @@
+{
+  "mode": "SIMULATED_ONLY",
+  "status": "example_not_a_real_publication",
+  "idempotency_key": "handoff:IDEA-001:version-1:channels-instagram-facebook",
+  "content_id": "IDEA-001",
+  "version": 1,
+  "text_sha256": "REPLACE_WITH_COMPUTED_HASH",
+  "media_reference": "media://synthetic/IDEA-001/cut-v1.mp4",
+  "channels": ["instagram", "facebook"],
+  "scheduled_at": "2026-11-23T10:00:00+01:00",
+  "approval": {
+    "status": "approved",
+    "approval_id": "APPROVAL-SYNTHETIC-001",
+    "approved_version": 1
+  },
+  "external_publish": false
+}
