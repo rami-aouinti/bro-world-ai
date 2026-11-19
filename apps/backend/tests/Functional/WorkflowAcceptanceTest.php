@@ -62,6 +62,7 @@ final class WorkflowAcceptanceTest extends WebTestCase
         $slots[1]['estimatedMinutes'] = 30;
         $slots[2]['assignee'] = 'A';
         $slots[2]['estimatedMinutes'] = 30;
+        $slots[4]['assignee'] = 'B';
 
         $this->postJson('/api/workflow/weekly-plans', [
             'weekStart' => '2027-01-04',
