@@ -370,3 +370,11 @@ td:first-child small { display: block; margin-top: 4px; color: #a1aaa8; font-siz
   .metric-symbol { width: 23px; height: 23px; }
   .effort-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+
+.heading-buttons { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 9px; }
+.ai-suggestions-panel { margin-bottom: 17px; }
+.ai-suggestions-panel .section-description { margin: -4px 0 15px; color: #899590; font-size: 9px; line-height: 1.5; }
+@media (max-width: 720px) {
+  .heading-buttons { width: 100%; justify-content: flex-start; }
+}
