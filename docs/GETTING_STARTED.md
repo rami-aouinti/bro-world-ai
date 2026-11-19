@@ -49,7 +49,7 @@ After the stack is healthy:
 python scripts/ingest-knowledge.py
 ```
 
-This sends three synthetic brand/product/approval documents to FastAPI. With the default mock provider this validates ingestion and vector persistence only; mock vectors are not semantic. Use Ollama and nomic-embed-text for meaningful similarity search.
+This sends six synthetic brand, product, approval and inspiration documents to FastAPI. With the default mock provider this validates ingestion and vector persistence only; mock vectors are not semantic. Use Ollama and nomic-embed-text for meaningful similarity search.
 
 ## Import n8n workflows
 Open http://localhost:5678, complete the initial owner setup if prompted, then import the JSON files from workflows/exports. Read docs/N8N-WORKFLOWS.md before activating the Monday schedule. The email workflow returns an unsent draft and handoff remains simulated.
