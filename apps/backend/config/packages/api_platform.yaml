@@ -1,6 +1,7 @@
 api_platform:
-    title: Hello API Platform
-    version: 1.0.0
+    title: Bro World AI - Social Workflow API
+    description: API for planning and managing AI-assisted social media content workflows.
+    version: 0.1.0
     defaults:
         stateless: true
         cache_headers:
