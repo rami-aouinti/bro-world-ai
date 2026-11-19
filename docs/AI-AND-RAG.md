@@ -39,13 +39,14 @@ In APP_ENV=test, the adapter deliberately uses the deterministic backend fallbac
 If FastAPI is unavailable in development, Symfony returns HTTP 503 rather than silently pretending an AI call succeeded.
 
 ## RAG lifecycle
-1. Synthetic brand, product and approval documents live in data/synthetic/knowledge-documents.json.
+1. Synthetic brand, product, approval and inspiration documents live in data/synthetic/knowledge-documents.json. The three inspiration source IDs (SYN-IG-001, SYN-TT-002, SYN-LI-003) retain their channel metadata and explicitly unknown metrics.
 2. The ingestion script sends each document to POST /api/v1/knowledge.
 3. FastAPI normalizes and chunks text with overlap.
 4. The configured embedding provider creates one 768-dimensional vector per chunk.
 5. Chunks and metadata are stored in ai_knowledge_chunks using pgvector.
-6. During brief generation, FastAPI embeds the topic/audience query and retrieves the five nearest chunks using cosine distance.
-7. Retrieved text is added to the generation prompt. It does not override explicit inputs or Symfony business rules.
+6. During idea or brief generation, FastAPI embeds the campaign/topic and audience query and retrieves up to five nearest chunks using cosine distance.
+7. Retrieved text is added to the generation prompt as reference context. Inspiration records remain fictional hypotheses, not measured trends. Retrieved text does not override explicit inputs or Symfony business rules.
+8. The API returns the source IDs used so the caller can trace the retrieved context.
 
 Load the sample knowledge base:
 
