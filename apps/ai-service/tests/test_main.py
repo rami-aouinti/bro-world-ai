@@ -1,6 +1,12 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app, settings, _split_chunks
+
+
+@pytest.fixture(autouse=True)
+def use_deterministic_provider(monkeypatch):
+    monkeypatch.setattr(settings, 'ai_provider', 'mock')
 
 
 client = TestClient(app)
