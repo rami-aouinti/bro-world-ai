@@ -58,8 +58,11 @@ final class AiBriefGenerator
             throw new \RuntimeException('AI service returned invalid JSON.', previous: $exception);
         }
 
-        foreach (['hook', 'masterCopy', 'productionPlan', 'visual', 'channelVariants', 'effortMinutes'] as $required) {
-            if (!isset($payload[$required]) || !is_array($payload[$required]) && !is_string($payload[$required])) {
+        if (!is_string($payload['hook'] ?? null) || !is_string($payload['masterCopy'] ?? null)) {
+            throw new \RuntimeException('AI service response must contain a hook and master copy.');
+        }
+        foreach (['productionPlan', 'visual', 'channelVariants', 'effortMinutes'] as $required) {
+            if (!is_array($payload[$required] ?? null)) {
                 throw new \RuntimeException(sprintf('AI service response is missing "%s".', $required));
             }
         }
