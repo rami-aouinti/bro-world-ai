@@ -20,7 +20,7 @@ OpenAPI documentation is available at \`/docs\`.
 
 ## RAG
 
-Knowledge chunks are stored in PostgreSQL using the pgvector \`vector(768)\` type. The service creates the extension and table on startup. Ingesting a source replaces the existing chunks for that source ID. Retrieval uses cosine distance.
+Knowledge chunks are stored in PostgreSQL using the pgvector \`vector(768)\` type. The service creates the extension and table on startup. Ingesting a source replaces the existing chunks for that source ID. Retrieval uses cosine distance. Idea and brief generation can retrieve up to five chunks and return the source IDs used. The committed synthetic knowledge set includes three inspiration notes with channel IDs and unknown metrics.
 
 Example:
 
