@@ -1,0 +1,8 @@
+{
+  "delivery": "not_sent",
+  "to": "reviewer@example.invalid",
+  "subject": "Bro World AI weekly content plan — 23 November 2026",
+  "body": "Weekly content plan — week of 23 November 2026\nPriorities: 3 | Reserves: 2\nPerson A: 60/90 minutes (30 remaining)\nPerson B: 110/150 minutes (40 remaining)\n\nPlease review the five draft ideas and complete the human approval workflow before handoff. This email is a synthetic draft and has not been sent.",
+  "requiresHumanReview": true,
+  "syntheticRecipient": true
+}
