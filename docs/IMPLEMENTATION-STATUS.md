@@ -24,14 +24,14 @@ Last updated: 2026-11-19
 
 ### n8n
 - Four importable exports exist in workflows/exports: weekly AI planning, AI content production, approval email draft and approved handoff.
-- Weekly planning creates five AI-suggested ideas and a capacity-safe plan.
+- Weekly planning creates five AI-suggested ideas and a capacity-safe plan, then returns a text overview and an unsent email draft.
 - Content production delegates to Symfony, which calls FastAPI.
 - Approval notification produces an unsent email draft; it does not send mail or approve content.
 - Handoff calls Symfony and remains simulated; Symfony enforces approval and idempotency.
 - Workflows must be imported and activated in the local n8n UI before they execute.
 
 ### Synthetic assignment material
-- Campaign input, three synthetic inspiration findings with channel/source IDs, synthetic brand guidelines, RAG documents, weekly plan example, AI brief example and unsent email draft are in data/synthetic.
+- Campaign input, three synthetic inspiration findings with channel/source IDs, synthetic brand guidelines, RAG documents, weekly plan example, AI brief example, weekly overview and unsent email drafts are in data/synthetic.
 - Unknown inspiration metrics are explicitly null. Findings are fictional creative hypotheses, not verified trends.
 
 ## Previously verified backend baseline
