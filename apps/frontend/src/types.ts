@@ -124,5 +124,7 @@ export interface IdeaGenerationResponse {
   ai: {
     provider: string
     simulated: boolean
+    knowledgeContextCount?: number
   }
+  knowledgeSources?: Array<{ sourceId: string; title: string; metadata?: Record<string, unknown> }>
 }
