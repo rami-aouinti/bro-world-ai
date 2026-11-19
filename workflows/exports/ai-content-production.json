@@ -1,0 +1,93 @@
+{
+  "name": "Bro World AI - AI Content Production",
+  "nodes": [
+    {
+      "id": "content-webhook",
+      "name": "Request AI brief",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        260
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bro-world-ai-content-brief",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "generate-brief",
+      "name": "Ask Symfony to generate AI brief",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        260
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'http://backend:8000/api/workflow/content-ideas/' + $json.body.ideaId + '/brief' }}",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({mediaReference: $json.body.mediaReference, scheduledAt: $json.body.scheduledAt}) }}",
+        "options": {
+          "timeout": 150000
+        }
+      }
+    },
+    {
+      "id": "respond-content",
+      "name": "Return generated brief",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        560,
+        260
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 201
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Request AI brief": {
+      "main": [
+        [
+          {
+            "node": "Ask Symfony to generate AI brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Symfony to generate AI brief": {
+      "main": [
+        [
+          {
+            "node": "Return generated brief",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
