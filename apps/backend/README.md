@@ -29,7 +29,7 @@ docker compose exec backend php bin/console doctrine:migrations:migrate --no-int
 ## Tests
 
 ```bash
-docker compose exec backend php bin/phpunit
+docker compose exec backend vendor/bin/phpunit
 ```
 
 ## First resource: ContentIdea
