@@ -1,0 +1,16 @@
+{
+  "week": "2026-W48",
+  "status": "synthetic-example-not-yet-executed-by-the-application",
+  "selection_rationale": "The three priorities cover seasonal relevance, practical customer value and a professional B2B audience. Two reserves provide alternatives if capacity or production constraints change. Inspiration observations are not treated as confirmed trends.",
+  "committed_capacity_minutes": {"person_a": 90, "person_b": 150},
+  "committed_load_minutes": {"person_a": 80, "person_b": 135},
+  "remaining_capacity_minutes": {"person_a": 10, "person_b": 15},
+  "ideas": [
+    {"id":"IDEA-001","topic":"Sonnenbrillen und wechselnde Lichtverhältnisse im Herbst","channels":["instagram","facebook"],"format":"short_video","owner":"person_a","planned_at":"2026-11-23T10:00:00+01:00","effort_minutes":80,"status":"priority","priority":1},
+    {"id":"IDEA-002","topic":"Bildschirmarbeit: kleine Sehpausen im Arbeitsalltag","channels":["linkedin"],"format":"carousel","owner":"person_b","planned_at":"2026-11-24T09:00:00+01:00","effort_minutes":70,"status":"priority","priority":2},
+    {"id":"IDEA-003","topic":"Brillenpflege: drei alltagstaugliche Tipps","channels":["instagram","tiktok"],"format":"short_video","owner":"person_b","planned_at":"2026-11-26T11:00:00+01:00","effort_minutes":65,"status":"priority","priority":3},
+    {"id":"IDEA-004","topic":"So läuft eine persönliche Brillenberatung ab","channels":["facebook","linkedin"],"format":"photo_story","owner":"person_a","planned_at":null,"effort_minutes":35,"status":"reserve","priority":null},
+    {"id":"IDEA-005","topic":"Mythen rund um die Brillenreinigung","channels":["instagram","tiktok"],"format":"short_video","owner":"person_b","planned_at":null,"effort_minutes":40,"status":"reserve","priority":null}
+  ],
+  "reserve_effort_is_not_in_committed_load": true
+}
