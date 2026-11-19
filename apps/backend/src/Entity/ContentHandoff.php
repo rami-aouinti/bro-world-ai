@@ -8,8 +8,9 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'content_handoffs', indexes: [new ORM\Index(name: 'idx_content_handoffs_idea', columns: ['content_idea_id'])])]
-#[ORM\UniqueConstraint(name: 'uniq_handoff_idempotency_key', columns: ['idempotency_key'])]
+#[ORM\Table(name: 'content_handoffs')]
+#[ORM\Index(name: 'idx_content_handoffs_idea', fields: ['contentIdea'])]
+#[ORM\UniqueConstraint(name: 'uniq_handoff_idempotency_key', fields: ['idempotencyKey'])]
 class ContentHandoff
 {
     #[ORM\Id]
