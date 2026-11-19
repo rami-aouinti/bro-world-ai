@@ -65,6 +65,26 @@ services:
     depends_on:
       - ollama
 
+  backend:
+    build:
+      context: ./apps/backend
+    container_name: bro-world-ai-backend
+    working_dir: /app
+    restart: unless-stopped
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: "1"
+      APP_SECRET: ${APP_SECRET:-local-development-secret-change-before-deployment}
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-change-me-local-only}@postgres:5432/${POSTGRES_DB:-bro_world_ai}?serverVersion=16&charset=utf8"
+    volumes:
+      - ./apps/backend:/app
+    command: ["sh", "-lc", "composer install --no-interaction --prefer-dist && php -S 0.0.0.0:8000 -t public"]
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   ollama_data:
