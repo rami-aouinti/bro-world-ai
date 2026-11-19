@@ -23,6 +23,22 @@ final class WorkflowAcceptanceTest extends WebTestCase
         );
     }
 
+    public function testAiIdeaSuggestionsReturnFiveDraftsWithoutPersistingThem(): void
+    {
+        $this->postJson('/api/workflow/ai/ideas', [
+            'campaign' => 'Synthetic summer eyewear campaign',
+            'audience' => 'Adults aged 25 to 40',
+            'tone' => 'Friendly and informative',
+            'channels' => ['instagram', 'facebook'],
+        ]);
+
+        $response = $this->responseData();
+        self::assertSame(200, $this->client->getResponse()->getStatusCode());
+        self::assertCount(5, $response['ideas']);
+        self::assertTrue($response['ai']['simulated']);
+        self::assertSame('0', $this->countRows('content_ideas'));
+    }
+
     public function testAt01CreatesAWeeklyPlanWithFiveDistinctIdeas(): void
     {
         $ideas = $this->createIdeas(5);
