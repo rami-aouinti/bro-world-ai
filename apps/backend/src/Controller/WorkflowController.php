@@ -191,8 +191,8 @@ final class WorkflowController
             return $this->error('scheduledAt is required because the schedule is part of the approval snapshot.');
         }
         try {
-            $scheduledAt = new \\DateTimeImmutable($scheduledAtInput);
-        } catch (\\Throwable) {
+            $scheduledAt = new \DateTimeImmutable($scheduledAtInput);
+        } catch (\Throwable) {
             return $this->error('scheduledAt must be a valid date-time.');
         }
 
