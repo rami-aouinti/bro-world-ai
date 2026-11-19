@@ -9,6 +9,7 @@ const page = ref<Page>('overview')
 const ideas = ref<ContentIdea[]>([])
 const aiSuggestions = ref<IdeaSuggestion[]>([])
 const aiProvider = ref('')
+const aiSourcesLabel = ref('')
 const aiLoading = ref(false)
 const currentPlan = ref<WeeklyPlan | null>(null)
 const loading = ref(false)
@@ -260,6 +261,7 @@ async function generateAiSuggestions(): Promise<void> {
     })
     aiSuggestions.value = result.ideas
     aiProvider.value = result.ai.provider + (result.ai.simulated ? ' · simulated' : '')
+    aiSourcesLabel.value = result.knowledgeSources?.map((source) => source.sourceId).join(', ') || 'No knowledge sources retrieved'
     successMessage.value = 'AI generated five suggestions. Review each one before adding it to your library.'
   } catch (error) {
     showError(error)
@@ -581,7 +583,7 @@ function goToPlan(): void {
           <div class="page-heading compact-heading"><div><div class="eyebrow">CONTENT LIBRARY</div><h1>Your ideas, <em>your voice.</em></h1><p>Collect ideas before turning them into a weekly plan.</p></div><div class="heading-buttons"><button class="outline-button" :disabled="aiLoading" @click="generateAiSuggestions">{{ aiLoading ? 'Generating…' : '✦ Generate 5 AI ideas' }}</button><button class="primary-button" @click="showIdeaForm = true">＋ Create idea</button></div></div>
           <section v-if="aiSuggestions.length" class="panel recent-panel ai-suggestions-panel">
             <div class="panel-heading"><div><div class="eyebrow">AI-ASSISTED IDEATION</div><h2>Five suggestions to review</h2></div><span class="week-chip">{{ aiProvider }}</span></div>
-            <p class="section-description">These are drafts, not verified trends or approved posts. Add only the ideas you want to keep.</p>
+            <p class="section-description">RAG sources: {{ aiSourcesLabel }}. These are drafts, not verified trends or approved posts. Add only the ideas you want to keep.</p>
             <div class="idea-grid">
               <article v-for="suggestion in aiSuggestions" :key="suggestion.title" class="idea-card">
                 <div class="idea-card-top"><span class="idea-category">AI SUGGESTION</span><span class="status-pill status-draft">Draft</span></div>
