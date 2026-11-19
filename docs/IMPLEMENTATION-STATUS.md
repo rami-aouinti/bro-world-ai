@@ -63,3 +63,10 @@ The latest AI/RAG and Symfony-to-FastAPI changes are committed to master, but st
 - Production authentication, secrets management, monitoring and deployment hardening.
 
 Do not report features as locally verified until the commands and manual checks above have been run.
+
+
+## Local verification fixes (2026-11-19)
+
+- Configure `PYTHONPATH=/app` in the AI service image so pytest can import `app` when run from the container root.
+- Register PostgreSQL `vector` as a Doctrine `string` introspection mapping. The pgvector table is owned by FastAPI and is not a Doctrine entity; this mapping prevents DBAL schema introspection from failing on the extension type.
+- These two configuration fixes are committed but still require a local rebuild and verification.
