@@ -28,6 +28,42 @@ final class WorkflowController
     ) {
     }
 
+    #[Route('/ai/ideas', name: 'workflow_generate_ai_ideas', methods: ['POST'])]
+    public function generateAiIdeas(Request $request): JsonResponse
+    {
+        $data = $this->body($request);
+        if ($data instanceof JsonResponse) {
+            return $data;
+        }
+
+        $campaign = trim((string) ($data['campaign'] ?? ''));
+        $audience = trim((string) ($data['audience'] ?? ''));
+        $tone = trim((string) ($data['tone'] ?? 'friendly and helpful'));
+        $channels = $data['channels'] ?? ['instagram', 'facebook'];
+        $allowedChannels = ['instagram', 'facebook', 'tiktok', 'linkedin'];
+        if ($campaign === '' || $audience === '' || !is_array($channels) || $channels === []) {
+            return $this->error('campaign, audience and at least one channel are required.');
+        }
+        foreach ($channels as $channel) {
+            if (!is_string($channel) || !in_array($channel, $allowedChannels, true)) {
+                return $this->error('channels must contain only instagram, facebook, tiktok or linkedin.');
+            }
+        }
+
+        try {
+            $result = $this->aiBriefGenerator->generateIdeas([
+                'campaign' => $campaign,
+                'audience' => $audience,
+                'tone' => $tone,
+                'channels' => array_values(array_unique($channels)),
+            ]);
+        } catch (\RuntimeException $exception) {
+            return $this->error('AI idea generation is temporarily unavailable: ' . $exception->getMessage(), 503);
+        }
+
+        return new JsonResponse($result);
+    }
+
     #[Route('/weekly-plans', name: 'workflow_create_weekly_plan', methods: ['POST'])]
     public function createWeeklyPlan(Request $request): JsonResponse
     {
