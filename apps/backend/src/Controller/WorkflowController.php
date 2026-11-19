@@ -11,6 +11,7 @@ use App\Entity\ContentIdea;
 use App\Entity\PlanSlot;
 use App\Entity\WeeklyPlan;
 use App\Enum\ContentIdeaStatus;
+use App\Service\AiBriefGenerator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,6 +24,7 @@ final class WorkflowController
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
+        private readonly AiBriefGenerator $aiBriefGenerator,
     ) {
     }
 
@@ -208,19 +210,36 @@ final class WorkflowController
             };
         }
 
-        $payload = [
-            'idea' => ['id' => $idea->getId(), 'title' => $idea->getTitle(), 'topic' => $idea->getTopic(), 'audience' => $idea->getTargetAudience(), 'tone' => $idea->getTone()],
-            'channels' => $channels,
-            'scheduledAt' => $scheduledAt->format(DATE_ATOM),
-            'hook' => 'Du suchst eine Brille, die zu deinem Alltag passt?',
-            'masterCopy' => $idea->getTopic() . '. Entdecke unsere Auswahl und lass dich persönlich beraten.',
-            'productionPlan' => ['format' => 'Product photo or 15-second vertical video', 'steps' => ['Prepare product and location', 'Capture photo/video', 'Review accessibility and brand tone', 'Export channel variants']],
-            'visual' => ['overlay' => 'Finde deinen Look', 'titleImage' => 'Hero product image with clean background', 'mediaReference' => $mediaReference],
-            'bookingLink' => 'https://example.invalid/appointment',
-            'channelVariants' => $variants,
-            'effortMinutes' => ['research' => 15, 'copyAndVariants' => 25, 'production' => 35, 'coordinationAndApproval' => 15, 'total' => 90],
-            'assumptions' => ['Synthetic example copy; human review required.', 'Booking URL is a placeholder and must be replaced before real use.', 'No media file is uploaded or published by this prototype.'],
-        ];
+        try {
+            $payload = $this->aiBriefGenerator->generate([
+                'id' => $idea->getId(),
+                'title' => $idea->getTitle(),
+                'topic' => $idea->getTopic(),
+                'audience' => $idea->getTargetAudience(),
+                'tone' => $idea->getTone(),
+                'channels' => $channels,
+            ], $scheduledAt, $mediaReference);
+        } catch (\RuntimeException $exception) {
+            return $this->error('AI content generation is temporarily unavailable: ' . $exception->getMessage(), 503);
+        }
+
+        if ($payload === null) {
+            $payload = [
+                'idea' => ['id' => $idea->getId(), 'title' => $idea->getTitle(), 'topic' => $idea->getTopic(), 'audience' => $idea->getTargetAudience(), 'tone' => $idea->getTone()],
+                'channels' => $channels,
+                'scheduledAt' => $scheduledAt->format(DATE_ATOM),
+                'hook' => 'Du suchst eine Brille, die zu deinem Alltag passt?',
+                'masterCopy' => $idea->getTopic() . '. Entdecke unsere Auswahl und lass dich persönlich beraten.',
+                'productionPlan' => ['format' => 'Product photo or 15-second vertical video', 'steps' => ['Prepare product and location', 'Capture photo/video', 'Review accessibility and brand tone', 'Export channel variants']],
+                'visual' => ['overlay' => 'Finde deinen Look', 'titleImage' => 'Hero product image with clean background', 'mediaReference' => $mediaReference],
+                'bookingLink' => 'https://example.invalid/appointment',
+                'channelVariants' => $variants,
+                'effortMinutes' => ['research' => 15, 'copyAndVariants' => 25, 'production' => 35, 'coordinationAndApproval' => 15, 'total' => 90],
+                'assumptions' => ['Synthetic example copy; human review required.', 'Booking URL is a placeholder and must be replaced before real use.', 'No media file is uploaded or published by this prototype.'],
+            ];
+            $payload['ai'] = ['provider' => 'deterministic-backend-fallback', 'simulated' => true, 'knowledgeContextCount' => 0];
+        }
+
         $canonical = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         $hash = hash('sha256', $canonical);
 
