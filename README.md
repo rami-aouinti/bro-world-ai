@@ -23,7 +23,7 @@ AI-assisted platform to plan, draft, review and approve social-media content for
 - Four n8n workflow exports are committed under workflows/exports.
 
 ## Prototype boundaries
-No real social accounts, customers, publishing APIs, paid AI APIs or personal data are used. Media and booking references are placeholders. The approval email workflow returns an unsent draft. Inspiration findings and knowledge documents are synthetic. See docs/AI-AND-RAG.md, docs/N8N-WORKFLOWS.md, docs/OPERATIONS-AND-FUTURE-SCOPE.md, docs/IMPLEMENTATION-STATUS.md and docs/ACCEPTANCE-TESTS.md.
+No real social accounts, customers, publishing APIs, paid AI APIs or personal data are used. Media and booking references are placeholders. The approval email workflow returns an unsent draft. Inspiration findings and knowledge documents are synthetic. See docs/AI-AND-RAG.md, docs/N8N-WORKFLOWS.md, docs/OPERATIONS-AND-FUTURE-SCOPE.md, docs/DEMO-SCRIPT.md, docs/IMPLEMENTATION-STATUS.md and docs/ACCEPTANCE-TESTS.md.
 
 ## Start locally
 ```bash
