@@ -25,5 +25,38 @@
       "kind": "workflow-policy",
       "synthetic": true
     }
+  },
+  {
+    "sourceId": "SYN-IG-001",
+    "title": "Synthetic Instagram inspiration finding",
+    "text": "Synthetic creative hypothesis for Instagram: a short vertical video showing a simple eyewear styling or product-selection process may be a useful creative format. This is not a verified trend. Views, reach and engagement metrics are unknown and must not be invented.",
+    "metadata": {
+      "kind": "inspiration-finding",
+      "channel": "instagram",
+      "synthetic": true,
+      "metricsVerified": false
+    }
+  },
+  {
+    "sourceId": "SYN-TT-002",
+    "title": "Synthetic TikTok inspiration finding",
+    "text": "Synthetic creative hypothesis for TikTok: a concise three-point explainer can make an everyday eyewear topic easy to follow in a short video. This is not a verified trend. Views, reach and engagement metrics are unknown and must not be invented.",
+    "metadata": {
+      "kind": "inspiration-finding",
+      "channel": "tiktok",
+      "synthetic": true,
+      "metricsVerified": false
+    }
+  },
+  {
+    "sourceId": "SYN-LI-003",
+    "title": "Synthetic LinkedIn inspiration finding",
+    "text": "Synthetic creative hypothesis for LinkedIn: a professional post about customer consultation and service quality may suit a business-oriented audience. This is not a verified trend. Impressions, clicks and engagement metrics are unknown and must not be invented.",
+    "metadata": {
+      "kind": "inspiration-finding",
+      "channel": "linkedin",
+      "synthetic": true,
+      "metricsVerified": false
+    }
   }
 ]
