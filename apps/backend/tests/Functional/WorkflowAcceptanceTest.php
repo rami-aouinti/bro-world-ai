@@ -134,6 +134,7 @@ final class WorkflowAcceptanceTest extends WebTestCase
             [],
             ['HTTP_IDEMPOTENCY_KEY' => 'at08-exactly-once'],
         );
+        self::assertSame(201, $this->client->getResponse()->getStatusCode());
         $first = $this->responseData();
 
         $this->client->request(
@@ -145,7 +146,7 @@ final class WorkflowAcceptanceTest extends WebTestCase
         );
         $second = $this->responseData();
 
-        self::assertSame(201, $this->client->getResponse()->getStatusCode() === 201 ? 201 : 200);
+        self::assertSame(200, $this->client->getResponse()->getStatusCode());
         self::assertFalse($first['idempotentReplay']);
         self::assertTrue($second['idempotentReplay']);
         self::assertSame($first['handoffId'], $second['handoffId']);
