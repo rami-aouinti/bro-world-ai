@@ -14,6 +14,8 @@ Last updated: 2026-11-19
 - PATCH editing that invalidates the old brief and approval and returns the idea to draft.
 - Simulated handoff guarded by approval and media reference, with a database unique idempotency key and replay response.
 - Backend usage documentation and acceptance test suite.
+- Vue 3 + TypeScript + Vite frontend with overview dashboard, idea library, weekly planning, team capacity allocation, review queue, brief editor, version-aware approval actions and simulated handoff.
+- Docker Compose frontend service exposed on host port 3000; Vite proxies /api requests to Symfony.
 
 ## Local verification completed (2026-11-19)
 
@@ -40,6 +42,11 @@ docker compose exec backend php bin/console doctrine:migrations:migrate --no-int
 docker compose exec backend php bin/console doctrine:schema:validate
 ```
 
+## Frontend verification status
+
+- Frontend source, Dockerfile, Vite proxy and Docker Compose service are committed on `master`.
+- The frontend build and browser workflow have **not yet been executed locally**. Run the frontend startup and production build checks described in `apps/frontend/README.md` before reporting frontend verification as passed.
+
 ## Simulated / not connected to external services
 
 - AI generation is deterministic when `AI_PROVIDER=mock`; Ollama is an optional local provider.
@@ -49,7 +56,7 @@ docker compose exec backend php bin/console doctrine:schema:validate
 
 ## Not implemented yet
 
-- Completed frontend screens and end-to-end browser workflow.
+- Frontend end-to-end browser tests and automated frontend component tests.
 - RAG ingestion, chunking, embeddings and retrieval.
 - Exported/connected n8n workflow definitions and real notifications.
 - Real social network publishing, analytics calculations, ROI dashboard and comment moderation.
