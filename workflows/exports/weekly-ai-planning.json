@@ -1,0 +1,255 @@
+{
+  "name": "Bro World AI - Weekly AI Planning",
+  "nodes": [
+    {
+      "id": "weekly-webhook",
+      "name": "Manual weekly trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        160
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bro-world-ai-weekly-plan",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "weekly-schedule",
+      "name": "Every Monday 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        360
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "generate-ideas",
+      "name": "Generate five ideas with AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        240
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://ai-service:8001/api/v1/ideas",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({campaign: 'Weekly optical retailer social content', audience: 'Adults interested in eyewear and eye-care services', tone: 'friendly, clear and helpful', channels: ['instagram', 'facebook'], count: 5}) }}",
+        "options": {
+          "timeout": 120000
+        }
+      }
+    },
+    {
+      "id": "split-ideas",
+      "name": "Prepare five ideas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        240
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const response = $input.first().json;\nif (!Array.isArray(response.ideas) || response.ideas.length !== 5) throw new Error('AI must return exactly five ideas');\nreturn response.ideas.map((idea, index) => ({ json: { ...idea, _slotIndex: index } }));"
+      }
+    },
+    {
+      "id": "create-ideas",
+      "name": "Persist ideas in Symfony",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        240
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/content_ideas",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/ld+json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/ld+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({title: $json.title, topic: $json.topic, targetAudience: $json.targetAudience, tone: $json.tone, channels: $json.channels}) }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "build-plan",
+      "name": "Build capacity-safe weekly plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        240
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const created = $input.all().map(item => item.json);\nif (created.length !== 5 || created.some(item => !item.id)) throw new Error('Symfony must return five created ideas with IDs');\nconst now = new Date();\nconst daysSinceMonday = (now.getDay() + 6) % 7;\nnow.setDate(now.getDate() - daysSinceMonday);\nconst weekStart = now.toISOString().slice(0, 10);\nconst minutes = [30, 30, 40, 40, 30];\nconst slots = created.map((idea, index) => ({ ideaId: idea.id, type: index < 3 ? 'priority' : 'reserve', assignee: index < 2 ? 'A' : 'B', estimatedMinutes: minutes[index] }));\nreturn [{ json: { weekStart, capacityPersonA: 90, capacityPersonB: 150, slots, generatedIdeaCount: created.length, note: 'Synthetic AI suggestions; human selection and review are still required.' } }];"
+      }
+    },
+    {
+      "id": "create-plan",
+      "name": "Create weekly plan in Symfony",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        240
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/workflow/weekly-plans",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({weekStart: $json.weekStart, capacityPersonA: $json.capacityPersonA, capacityPersonB: $json.capacityPersonB, slots: $json.slots}) }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "respond-weekly",
+      "name": "Return weekly plan",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1560,
+        240
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 201
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual weekly trigger": {
+      "main": [
+        [
+          {
+            "node": "Generate five ideas with AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every Monday 08:00": {
+      "main": [
+        [
+          {
+            "node": "Generate five ideas with AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate five ideas with AI": {
+      "main": [
+        [
+          {
+            "node": "Prepare five ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare five ideas": {
+      "main": [
+        [
+          {
+            "node": "Persist ideas in Symfony",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Persist ideas in Symfony": {
+      "main": [
+        [
+          {
+            "node": "Build capacity-safe weekly plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build capacity-safe weekly plan": {
+      "main": [
+        [
+          {
+            "node": "Create weekly plan in Symfony",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create weekly plan in Symfony": {
+      "main": [
+        [
+          {
+            "node": "Return weekly plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
