@@ -1,0 +1,21 @@
+{
+  "scenario": "fictional-optician",
+  "week": "2026-W48",
+  "brand": {
+    "name": "Sehblick Atelier",
+    "tone": ["persönlich", "freundlich", "kompetent", "verständlich"],
+    "audiences": ["Menschen mit Bildschirmarbeit", "Familien", "modebewusste Erwachsene"]
+  },
+  "seasonal_context": "Beginn der dunkleren Jahreszeit",
+  "channels": ["instagram", "facebook", "tiktok", "linkedin"],
+  "capacity_minutes": {
+    "person_a": 90,
+    "person_b": 150
+  },
+  "inspiration": [
+    {"id": "src-001", "channel": "instagram", "reference": "example.com/source-001", "observation": "Mehrere Kurzvideo-Ideen zu Bildschirm-Pausen", "metrics": null},
+    {"id": "src-002", "channel": "linkedin", "reference": "example.com/source-002", "observation": "Diskussion über ergonomische Arbeitsplätze", "metrics": null},
+    {"id": "src-003", "channel": "tiktok", "reference": "example.com/source-003", "observation": "Kurze Erklärformate zu Brillenpflege", "metrics": null}
+  ],
+  "note": "All entities, references and observations are synthetic. No trend is confirmed by these observations."
+}
