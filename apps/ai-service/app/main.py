@@ -194,9 +194,11 @@ async def generate(payload: GenerateRequest) -> GenerateResponse:
 @app.post("/api/v1/ideas")
 async def generate_ideas(payload: IdeasRequest) -> dict:
     retrieved: list[str] = []
+    retrieved_sources: list[dict] = []
     if payload.useKnowledgeBase and settings.database_url:
         result = await retrieve_knowledge(RetrieveRequest(query=f"{payload.campaign}. {payload.audience}", topK=5))
         retrieved = [item["text"] for item in result["results"]]
+        retrieved_sources = [{"sourceId": item["sourceId"], "title": item["title"], "metadata": item["metadata"]} for item in result["results"]]
     if settings.ai_provider == "mock":
         suggestions = [
             ("Sommer und Augenschutz", "Praktische Tipps zum Schutz der Augen an sonnigen Tagen"),
@@ -209,7 +211,7 @@ async def generate_ideas(payload: IdeasRequest) -> dict:
             {"title": title, "topic": topic, "targetAudience": payload.audience, "tone": payload.tone, "channels": payload.channels}
             for title, topic in suggestions
         ]
-        return {"ideas": ideas, "provider": "deterministic-mock", "simulated": True, "knowledgeContextCount": len(retrieved)}
+        return {"ideas": ideas, "provider": "deterministic-mock", "simulated": True, "knowledgeContextCount": len(retrieved), "knowledgeSources": retrieved_sources}
     prompt = (
         "Return JSON only with an object containing an ideas array of exactly five objects. "
         "Each object must have title, topic, targetAudience, tone and channels. "
@@ -225,7 +227,7 @@ async def generate_ideas(payload: IdeasRequest) -> dict:
             raise ValueError("Expected exactly five ideas")
     except (KeyError, TypeError, ValueError) as exc:
         raise HTTPException(status_code=502, detail="LLM returned an invalid five-idea structure") from exc
-    return {"ideas": ideas, "provider": f"ollama:{settings.ollama_model}", "simulated": False, "knowledgeContextCount": len(retrieved)}
+    return {"ideas": ideas, "provider": f"ollama:{settings.ollama_model}", "simulated": False, "knowledgeContextCount": len(retrieved), "knowledgeSources": retrieved_sources}
 
 
 def _split_chunks(text: str, size: int = 900, overlap: int = 120) -> list[str]:
@@ -296,9 +298,11 @@ async def retrieve_knowledge(payload: RetrieveRequest) -> dict:
 @app.post("/api/v1/brief")
 async def generate_brief(payload: BriefRequest) -> dict:
     retrieved: list[str] = []
+    retrieved_sources: list[dict] = []
     if payload.useKnowledgeBase and settings.database_url:
         result = await retrieve_knowledge(RetrieveRequest(query=f"{payload.topic}. {payload.audience}", topK=5))
         retrieved = [item["text"] for item in result["results"]]
+        retrieved_sources = [{"sourceId": item["sourceId"], "title": item["title"], "metadata": item["metadata"]} for item in result["results"]]
     context = payload.context + retrieved
     if settings.ai_provider == "mock":
         hook = f"Eine Brille, die zu deinem Alltag passt: {payload.topic}."
@@ -362,4 +366,5 @@ async def generate_brief(payload: BriefRequest) -> dict:
         "effortMinutes": {"research": 15, "copyAndVariants": 25, "production": 35, "coordinationAndApproval": 15, "total": 90},
         "assumptions": ["AI output is a draft and requires human review.", "Booking URL and media reference are placeholders.", "No social network is contacted and no post is published."],
         "ai": {"provider": provider, "simulated": simulated, "knowledgeContextCount": len(retrieved)},
+        "knowledgeSources": retrieved_sources,
     }
