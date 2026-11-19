@@ -76,10 +76,10 @@ Generate a complete deterministic sample brief. `mediaReference` is a required r
 ```bash
 curl -X POST http://localhost:8000/api/workflow/content-ideas/IDEA_UUID/brief \
   -H 'Content-Type: application/json' \
-  -d '{"mediaReference":"media://sample/hero-image-001"}'
+  -d '{"mediaReference":"media://sample/hero-image-001","scheduledAt":"2026-11-25T10:00:00+01:00"}'
 ```
 
-The brief contains a hook, master copy, production steps, visual overlay/title-image direction, placeholder booking URL, distinct variants for each selected channel and an effort breakdown. The copy and media reference are synthetic examples, not verified campaign recommendations.
+The brief contains a hook, master copy, production steps, visual overlay/title-image direction, placeholder booking URL, distinct variants for each selected channel, a schedule and an effort breakdown. The schedule, channel list, text and media reference are included in the version hash that is approved. The copy and media reference are synthetic examples, not verified campaign recommendations.
 
 ## 4. Review and approval
 
@@ -99,7 +99,7 @@ Explicitly approve the reviewed version:
 curl -X POST http://localhost:8000/api/workflow/content-ideas/IDEA_UUID/approve
 ```
 
-Only an idea with a complete brief and media reference can enter review. Only an idea in `review` can be approved. Approval creates a persistent approval record containing the SHA-256 hash of the exact approved brief and its timestamp. Handoff verifies that the current brief hash still matches this approval record.
+Only an idea assigned to a weekly plan and having a complete brief, media reference and schedule can enter review. Only an idea in `review` can be approved. Approval creates a persistent approval record containing the SHA-256 hash of the exact approved brief and its timestamp. Handoff verifies that the current brief hash still matches this approval record.
 
 Edit a non-handed-off idea with PATCH:
 
@@ -115,12 +115,10 @@ Any edit invalidates the prior brief and approval by removing both records and r
 
 ```bash
 curl -X POST http://localhost:8000/api/workflow/content-ideas/IDEA_UUID/handoff \
-  -H 'Content-Type: application/json' \
-  -H 'Idempotency-Key: campaign-idea-001-v1' \
-  -d '{"scheduledAt":"2026-11-25T10:00:00+01:00"}'
+  -H 'Idempotency-Key: campaign-idea-001-v1'
 ```
 
-Handoff is allowed only after explicit approval and with a media reference. The response is a simulated handoff payload; no social network is contacted and no post is published. Repeating the request with the same key returns the original handoff (`idempotentReplay: true`) rather than creating another row. The database enforces a unique constraint on the idempotency key.
+Handoff is allowed only after explicit approval of the current brief hash, a complete weekly-plan assignment and a media reference. The approved schedule is read from the immutable brief; it cannot be added or changed during handoff. The response is a simulated handoff payload; no social network is contacted and no post is published. Repeating the request with the same key returns the original handoff (`idempotentReplay: true`) rather than creating another row. The database enforces a unique constraint on the idempotency key.
 
 ## Architecture and boundaries
 
