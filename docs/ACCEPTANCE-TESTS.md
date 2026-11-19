@@ -1,39 +1,47 @@
 # Required acceptance scenarios
 
-The workflow API is implemented in the Symfony backend. The following scenarios are the required verification checklist. Do not describe a scenario as passed until it has been run against the local stack and its response/database result has been checked.
+The Symfony workflow API has an automated functional acceptance suite. The scenarios below were executed locally on 2026-11-19 against the dedicated test database `bro_world_ai_test1`.
 
-| ID | Scenario | Expected result |
-|---|---|---|
-| AT-01 | Create a weekly plan with 5 distinct ideas, 3 priority and 2 reserve, each assigned to A or B with estimated minutes | HTTP 201; one plan and five slots persisted |
-| AT-02 | Submit 4 priority slots, 1 reserve, or any count other than 3+2 | HTTP 400; no plan persisted |
-| AT-03 | Assign Person A more than 90 minutes or Person B more than 150 minutes | HTTP 422 with planned, allowed and overrun minutes; no plan persisted |
-| AT-04 | Generate a brief without a media reference or approved schedule | HTTP 400; no brief persisted |
-| AT-05 | Submit for review without a brief or weekly-plan assignment | HTTP 400; lifecycle state unchanged |
-| AT-06 | Approve content that is not in review | HTTP 409 |
-| AT-07 | Handoff content without approval or media reference | HTTP 409/400; no handoff persisted |
-| AT-08 | Approve the exact brief snapshot (copy, media reference, channels and schedule) and hand it off twice using the same idempotency key | First request creates one handoff; retry returns the same handoff ID with idempotentReplay=true |
-| AT-09 | Reuse an idempotency key for a different content idea | HTTP 409 |
-| AT-10 | Edit an approved idea using PATCH | State resets to draft, previous brief is deleted, approval is invalidated; new brief/review/approval required |
-| AT-11 | Edit content after it has been handed off | HTTP 409; handed-off record remains immutable |
+## Results
 
-## Local verification commands
+<badge>13/13 PHPUnit tests passed</badge>
 
-After pulling master and applying migrations:
+- 2 unit tests passed.
+- 11 functional acceptance tests passed (AT-01 through AT-11).
+- 97 assertions, 0 failures.
+
+| ID | Scenario | Expected result | Result |
+|---|---|---|---|
+| AT-01 | Create a weekly plan with 5 distinct ideas, 3 priority and 2 reserve, each assigned to A or B with estimated minutes | HTTP 201; one plan and five slots persisted | Passed |
+| AT-02 | Submit an invalid priority/reserve distribution or a slot count other than five | HTTP 400; no plan persisted | Passed |
+| AT-03 | Assign Person A more than 90 minutes or Person B more than 150 minutes | HTTP 422 with planned, allowed and overrun minutes; no plan persisted | Passed |
+| AT-04 | Generate a brief without a media reference | HTTP 400; no brief persisted | Passed |
+| AT-05 | Submit for review without a brief or weekly-plan assignment | HTTP 400; lifecycle state unchanged | Passed |
+| AT-06 | Approve content that is not in review | HTTP 409 | Passed |
+| AT-07 | Handoff content without approval | HTTP 409; no handoff persisted | Passed |
+| AT-08 | Approve the exact brief snapshot and hand it off twice using the same idempotency key | First request creates one handoff; retry returns the same handoff ID with idempotentReplay=true | Passed |
+| AT-09 | Reuse an idempotency key for a different content idea | HTTP 409 | Passed |
+| AT-10 | Edit an approved idea using PATCH | State resets to draft, previous brief is deleted and approval is invalidated | Passed |
+| AT-11 | Edit content after it has been handed off | HTTP 409; handed-off record remains immutable | Passed |
+
+## Reproduce locally
+
+Run from the repository root:
 
 ```bash
-docker compose exec backend php bin/console doctrine:migrations:migrate --no-interaction
-docker compose exec backend php bin/console doctrine:schema:validate
-docker compose exec backend vendor/bin/phpunit
-docker compose exec backend php bin/console debug:router
+docker compose exec \
+  -e APP_ENV=test \
+  -e TEST_TOKEN=1 \
+  backend vendor/bin/phpunit --testdox
 ```
 
-Create five ideas through POST /api/content_ideas, then use the workflow endpoints documented in apps/backend/README.md. Inspect persisted rows with the PostgreSQL container or the API read endpoints.
+The explicit environment variables are important: `APP_ENV=test` activates Symfony's test configuration, and `TEST_TOKEN=1` selects the isolated `bro_world_ai_test1` database.
 
-## Evidence status
+The test suite truncates its workflow tables before each functional test. Ensure the test environment and test database suffix are used; do not run these tests against the development database.
 
-- The first ContentIdea POST was successfully executed locally and returned HTTP 201.
-- The first database migration (Version20261119130000) was successfully executed locally.
-- The second workflow migration and workflow acceptance scenarios have been committed but still require local execution after pulling the latest master.
-- The handoff is simulated only. No social network is contacted and no content is published.
+## Scope and limitations
 
-Errors must never be reported as successful publication. Every test report must distinguish executed, simulated and planned behavior.
+- These tests verify the Symfony backend workflow and persistence behavior. They are not end-to-end browser tests.
+- Handoff is simulated only. No social network is contacted and no content is published.
+- The suite verifies sequential retries with the same idempotency key. It does not currently prove race-free behavior under simultaneous concurrent requests.
+- AI generation, media upload, notifications, analytics and ROI are not covered by these acceptance tests.
