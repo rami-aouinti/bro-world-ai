@@ -14,6 +14,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/workflow')]
 final class WorkflowController
@@ -36,10 +37,13 @@ final class WorkflowController
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $weekStartInput)) {
             return $this->error('weekStart is required and must use YYYY-MM-DD.');
         }
-        try {
-            $weekStart = new \DateTimeImmutable($weekStartInput);
-        } catch (\Throwable) {
-            return $this->error('weekStart must be a valid date (YYYY-MM-DD).');
+        $weekStart = \DateTimeImmutable::createFromFormat('!Y-m-d', $weekStartInput);
+        $dateErrors = \DateTimeImmutable::getLastErrors();
+        if (!$weekStart || ($dateErrors !== false && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0)) || $weekStart->format('Y-m-d') !== $weekStartInput) {
+            return $this->error('weekStart must be a real calendar date in YYYY-MM-DD format.');
+        }
+        if ($weekStart->format('N') !== '1') {
+            return $this->error('weekStart must be a Monday.');
         }
 
         $slots = $data['slots'] ?? null;
