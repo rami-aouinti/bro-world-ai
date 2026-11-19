@@ -1,0 +1,98 @@
+{
+  "name": "Bro World AI - Approved Publishing Handoff",
+  "nodes": [
+    {
+      "id": "handoff-webhook",
+      "name": "Approved handoff event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        260
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bro-world-ai-approved-handoff",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "call-handoff",
+      "name": "Request guarded Symfony handoff",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        300,
+        260
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'http://backend:8000/api/workflow/content-ideas/' + $json.body.ideaId + '/handoff' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $json.body.idempotencyKey || ('n8n-' + $execution.id) }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "respond-handoff",
+      "name": "Return simulated handoff result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        600,
+        260
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 201
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Approved handoff event": {
+      "main": [
+        [
+          {
+            "node": "Request guarded Symfony handoff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request guarded Symfony handoff": {
+      "main": [
+        [
+          {
+            "node": "Return simulated handoff result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
