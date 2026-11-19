@@ -189,8 +189,8 @@ final class WorkflowController
         if (!$this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea])) {
             return $this->error('A complete brief with a media reference is required before review.');
         }
-        if ($idea->getStatus() === ContentIdeaStatus::HandedOff) {
-            return $this->error('Handed-off content cannot return to review.', 409);
+        if (!in_array($idea->getStatus(), [ContentIdeaStatus::Draft, ContentIdeaStatus::ReadyForPlanning], true)) {
+            return $this->error('Only draft or planned content can enter review.', 409);
         }
         $idea->setStatus(ContentIdeaStatus::Review);
         $this->entityManager->flush();
@@ -273,7 +273,7 @@ final class WorkflowController
                 'topic' => $idea->setTopic((string) $data[$field]),
                 'targetAudience' => $idea->setTargetAudience((string) $data[$field]),
                 'tone' => $idea->setTone((string) $data[$field]),
-                'channels' => is_array($data[$field]) ? $idea->setChannels($data[$field]) : null,
+                'channels' => is_array($data[$field]) ? $idea->setChannels($data[$field]) : throw new \\InvalidArgumentException('channels must be an array.'),
             };
         }
         $brief = $this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea]);
