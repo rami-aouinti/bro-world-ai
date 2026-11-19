@@ -4,14 +4,14 @@ The workflow API is implemented in the Symfony backend. The following scenarios 
 
 | ID | Scenario | Expected result |
 |---|---|---|
-| AT-01 | Create a weekly plan with 5 distinct ideas, 3 priority and 2 reserve | HTTP 201; one plan and five slots persisted |
+| AT-01 | Create a weekly plan with 5 distinct ideas, 3 priority and 2 reserve, each assigned to A or B with estimated minutes | HTTP 201; one plan and five slots persisted |
 | AT-02 | Submit 4 priority slots, 1 reserve, or any count other than 3+2 | HTTP 400; no plan persisted |
 | AT-03 | Assign Person A more than 90 minutes or Person B more than 150 minutes | HTTP 422 with planned, allowed and overrun minutes; no plan persisted |
-| AT-04 | Generate a brief without a media reference | HTTP 400; no brief persisted |
-| AT-05 | Submit for review without a brief | HTTP 400; lifecycle state unchanged |
+| AT-04 | Generate a brief without a media reference or approved schedule | HTTP 400; no brief persisted |
+| AT-05 | Submit for review without a brief or weekly-plan assignment | HTTP 400; lifecycle state unchanged |
 | AT-06 | Approve content that is not in review | HTTP 409 |
 | AT-07 | Handoff content without approval or media reference | HTTP 409/400; no handoff persisted |
-| AT-08 | Approve a brief and hand it off twice using the same idempotency key | First request creates one handoff; retry returns the same handoff ID with idempotentReplay=true |
+| AT-08 | Approve the exact brief snapshot (copy, media reference, channels and schedule) and hand it off twice using the same idempotency key | First request creates one handoff; retry returns the same handoff ID with idempotentReplay=true |
 | AT-09 | Reuse an idempotency key for a different content idea | HTTP 409 |
 | AT-10 | Edit an approved idea using PATCH | State resets to draft, previous brief is deleted, approval is invalidated; new brief/review/approval required |
 | AT-11 | Edit content after it has been handed off | HTTP 409; handed-off record remains immutable |
