@@ -41,7 +41,7 @@ class ContentBrief
     {
         $this->payload = $payload;
         $this->versionHash = $versionHash;
-        $this->createdAt = new \\DateTimeImmutable();
+        $this->createdAt = new \DateTimeImmutable();
     }
 
     public function getId(): string { return $this->id; }
