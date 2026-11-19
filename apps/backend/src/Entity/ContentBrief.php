@@ -37,6 +37,13 @@ class ContentBrief
         $this->createdAt = new \DateTimeImmutable();
     }
 
+    public function replacePayload(array $payload, string $versionHash): void
+    {
+        $this->payload = $payload;
+        $this->versionHash = $versionHash;
+        $this->createdAt = new \\DateTimeImmutable();
+    }
+
     public function getId(): string { return $this->id; }
     public function getContentIdea(): ContentIdea { return $this->contentIdea; }
     public function getPayload(): array { return $this->payload; }
