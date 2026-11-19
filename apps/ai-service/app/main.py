@@ -114,17 +114,23 @@ async def _embedding(text: str) -> list[float]:
     try:
         async with httpx.AsyncClient(timeout=90) as client:
             response = await client.post(
-                f"{settings.ollama_base_url.rstrip('/')}/api/embeddings",
-                json={"model": settings.ollama_embedding_model, "prompt": text},
+                f"{settings.ollama_base_url.rstrip('/')}/api/embed",
+                json={"model": settings.ollama_embedding_model, "input": text},
             )
+            if response.status_code == 404:
+                response = await client.post(
+                    f"{settings.ollama_base_url.rstrip('/')}/api/embeddings",
+                    json={"model": settings.ollama_embedding_model, "prompt": text},
+                )
             response.raise_for_status()
-            vector = response.json().get("embedding")
+            result = response.json()
+            vectors = result.get("embeddings")
+            vector = vectors[0] if isinstance(vectors, list) and vectors else result.get("embedding")
             if not isinstance(vector, list) or len(vector) != EMBEDDING_DIMENSIONS:
                 raise ValueError(f"Expected {EMBEDDING_DIMENSIONS} embedding dimensions")
             return [float(value) for value in vector]
-    except (httpx.HTTPError, ValueError, TypeError) as exc:
+    except (httpx.HTTPError, ValueError, TypeError, AttributeError) as exc:
         raise HTTPException(status_code=502, detail="Embedding provider unavailable or returned an invalid vector") from exc
-
 
 def _connection():
     if not settings.database_url:
