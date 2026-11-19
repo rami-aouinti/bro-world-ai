@@ -133,6 +133,19 @@ function statusClass(status: string): string {
   return 'status-' + status
 }
 
+function channelLabel(channel: string): string {
+  return channelLabels[channel as Channel] || channel
+}
+
+function openSlotIdea(id: string): void {
+  const idea = ideas.value.find((item) => item.id === id)
+  if (idea) void openIdea(idea)
+}
+
+function isIdeaAssigned(id: string): boolean {
+  return currentPlan.value?.slots.some((slot) => slot.ideaId === id) ?? false
+}
+
 function clearMessages(): void {
   errorMessage.value = ''
   successMessage.value = ''
@@ -532,7 +545,7 @@ function goToPlan(): void {
               <div class="capacity-card"><div class="capacity-card-head"><span class="person-dot person-a"></span><strong>Person A</strong><span>{{ currentPlan.capacity.A }} min capacity</span></div><div class="capacity-number">{{ currentPlan.allocatedMinutes.A }}<small> / {{ currentPlan.capacity.A }} min</small></div><div class="progress-track"><span class="progress-fill fill-a" :style="{ width: personProgress('A') + '%' }"></span></div><small class="remaining">{{ currentPlan.remainingMinutes?.A ?? currentPlan.capacity.A - currentPlan.allocatedMinutes.A }} minutes remaining</small></div>
               <div class="capacity-card"><div class="capacity-card-head"><span class="person-dot person-b"></span><strong>Person B</strong><span>{{ currentPlan.capacity.B }} min capacity</span></div><div class="capacity-number">{{ currentPlan.allocatedMinutes.B }}<small> / {{ currentPlan.capacity.B }} min</small></div><div class="progress-track"><span class="progress-fill fill-b" :style="{ width: personProgress('B') + '%' }"></span></div><small class="remaining">{{ currentPlan.remainingMinutes?.B ?? currentPlan.capacity.B - currentPlan.allocatedMinutes.B }} minutes remaining</small></div>
             </div>
-            <section class="panel plan-detail-panel"><div class="panel-heading"><div><div class="eyebrow">WEEK OF {{ formatDate(currentPlan.weekStart).toUpperCase() }}</div><h2>Editorial schedule</h2></div><span class="status-pill status-ready_for_planning">{{ currentPlan.slots.length }} slots assigned</span></div><div class="schedule-list"><div v-for="(slot, index) in currentPlan.slots" :key="slot.ideaId" class="schedule-row"><div class="schedule-number">{{ String(index + 1).padStart(2, '0') }}</div><div class="schedule-main"><span class="schedule-type" :class="slot.type">{{ slot.type }}</span><strong>{{ slot.title || ideas.find((idea) => idea.id === slot.ideaId)?.title || 'Content idea' }}</strong><small>{{ ideas.find((idea) => idea.id === slot.ideaId)?.topic || 'Content topic' }}</small></div><div class="schedule-owner"><span class="person-dot" :class="slot.assignee === 'A' ? 'person-a' : 'person-b'"></span> Person {{ slot.assignee }}</div><div class="schedule-minutes">{{ slot.estimatedMinutes }} <small>min</small></div><button class="row-action" @click="openIdea(ideas.find((idea) => idea.id === slot.ideaId)!)" :disabled="!ideas.find((idea) => idea.id === slot.ideaId)">↗</button></div></div><div class="plan-footnote"><span>✦</span> Capacity is based on assigned slot estimates. Brief effort estimates are illustrative and do not automatically change these allocations.</div></section>
+            <section class="panel plan-detail-panel"><div class="panel-heading"><div><div class="eyebrow">WEEK OF {{ formatDate(currentPlan.weekStart).toUpperCase() }}</div><h2>Editorial schedule</h2></div><span class="status-pill status-ready_for_planning">{{ currentPlan.slots.length }} slots assigned</span></div><div class="schedule-list"><div v-for="(slot, index) in currentPlan.slots" :key="slot.ideaId" class="schedule-row"><div class="schedule-number">{{ String(index + 1).padStart(2, '0') }}</div><div class="schedule-main"><span class="schedule-type" :class="slot.type">{{ slot.type }}</span><strong>{{ slot.title || ideas.find((idea) => idea.id === slot.ideaId)?.title || 'Content idea' }}</strong><small>{{ ideas.find((idea) => idea.id === slot.ideaId)?.topic || 'Content topic' }}</small></div><div class="schedule-owner"><span class="person-dot" :class="slot.assignee === 'A' ? 'person-a' : 'person-b'"></span> Person {{ slot.assignee }}</div><div class="schedule-minutes">{{ slot.estimatedMinutes }} <small>min</small></div><button class="row-action" @click="openSlotIdea(slot.ideaId)" :disabled="!ideas.find((idea) => idea.id === slot.ideaId)">↗</button></div></div><div class="plan-footnote"><span>✦</span> Capacity is based on assigned slot estimates. Brief effort estimates are illustrative and do not automatically change these allocations.</div></section>
           </template>
           <template v-else>
             <div class="plan-builder-grid">
@@ -593,7 +606,7 @@ function goToPlan(): void {
                 <div class="brief-block"><span>MASTER COPY</span><p>{{ selectedBrief.brief.masterCopy }}</p></div>
                 <div class="brief-block"><span>VISUAL DIRECTION</span><p>{{ selectedBrief.brief.visual.overlay }} · {{ selectedBrief.brief.visual.titleImage }}</p><small>Media: {{ selectedBrief.brief.visual.mediaReference }}</small></div>
                 <div class="brief-block"><span>PRODUCTION PLAN</span><p>{{ selectedBrief.brief.productionPlan.format }}</p><ol><li v-for="step in selectedBrief.brief.productionPlan.steps" :key="step">{{ step }}</li></ol></div>
-                <div class="brief-block"><span>CHANNEL VARIANTS</span><div v-for="(variant, channel) in selectedBrief.brief.channelVariants" :key="channel" class="variant-card"><strong>{{ channelLabels[channel as Channel] || channel }}</strong><p>{{ variant.copy }}</p><small>{{ variant.format }} · CTA: {{ variant.cta }}</small></div></div>
+                <div class="brief-block"><span>CHANNEL VARIANTS</span><div v-for="(variant, channel) in selectedBrief.brief.channelVariants" :key="channel" class="variant-card"><strong>{{ channelLabel(String(channel)) }}</strong><p>{{ variant.copy }}</p><small>{{ variant.format }} · CTA: {{ variant.cta }}</small></div></div>
                 <div class="brief-block"><span>EFFORT ESTIMATE</span><div class="effort-grid"><div><strong>{{ selectedBrief.brief.effortMinutes.research }}</strong><small>Research</small></div><div><strong>{{ selectedBrief.brief.effortMinutes.copyAndVariants }}</strong><small>Copy</small></div><div><strong>{{ selectedBrief.brief.effortMinutes.production }}</strong><small>Production</small></div><div><strong>{{ selectedBrief.brief.effortMinutes.coordinationAndApproval }}</strong><small>Approval</small></div><div class="effort-total"><strong>{{ selectedBrief.brief.effortMinutes.total }} min</strong><small>Total</small></div></div></div>
                 <div class="brief-schedule"><span>Scheduled</span><strong>{{ formatDateTime(selectedBrief.brief.scheduledAt) }}</strong></div>
                 <div class="brief-schedule"><span>Booking URL (placeholder)</span><strong>{{ selectedBrief.brief.bookingLink }}</strong></div>
@@ -607,8 +620,8 @@ function goToPlan(): void {
             <div class="workflow-steps"><div :class="{ complete: ['review', 'approved', 'handed_off'].includes(selectedIdea.status) }"><span>1</span><small>Draft</small></div><i></i><div :class="{ complete: ['review', 'approved', 'handed_off'].includes(selectedIdea.status) }"><span>2</span><small>Review</small></div><i></i><div :class="{ complete: ['approved', 'handed_off'].includes(selectedIdea.status) }"><span>3</span><small>Approve</small></div><i></i><div :class="{ complete: selectedIdea.status === 'handed_off' }"><span>4</span><small>Handoff</small></div></div>
             <p class="section-description">Content must be assigned to a weekly plan and have a complete brief before review. Approval applies to the exact brief version.</p>
             <div class="workflow-actions">
-              <button v-if="selectedIdea.status === 'draft' || selectedIdea.status === 'ready_for_planning'" class="secondary-button full-button" :disabled="saving || !selectedBrief || !currentPlan?.slots.some((slot) => slot.ideaId === selectedIdea?.id)" @click="submitForReview">Submit for review</button>
-              <p v-if="['draft', 'ready_for_planning'].includes(selectedIdea.status) && !currentPlan?.slots.some((slot) => slot.ideaId === selectedIdea?.id)" class="inline-hint">Add this idea to a weekly plan before submitting it for review.</p>
+              <button v-if="selectedIdea.status === 'draft' || selectedIdea.status === 'ready_for_planning'" class="secondary-button full-button" :disabled="saving || !selectedBrief || !isIdeaAssigned(selectedIdea.id)" @click="submitForReview">Submit for review</button>
+              <p v-if="['draft', 'ready_for_planning'].includes(selectedIdea.status) && !isIdeaAssigned(selectedIdea.id)" class="inline-hint">Add this idea to a weekly plan before submitting it for review.</p>
               <button v-if="selectedIdea.status === 'review'" class="primary-button full-button" :disabled="saving || !selectedBrief" @click="approveIdea">Approve this exact version <span>✓</span></button>
               <button v-if="selectedIdea.status === 'approved'" class="primary-button full-button" :disabled="saving" @click="handoffIdea">{{ saving ? 'Handing off…' : 'Create simulated handoff' }} <span>→</span></button>
               <div v-if="selectedIdea.status === 'handed_off'" class="handoff-success"><span>✓</span><div><strong>Handoff completed</strong><p>Persisted in the backend. No social platform was contacted and nothing was published.</p></div></div>
