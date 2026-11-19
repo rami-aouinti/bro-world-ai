@@ -3,6 +3,7 @@
 AI-assisted platform to plan, draft, review and approve social-media content for a fictional optical retailer.
 
 ## Stack
+
 - Backend: PHP 8.3+ / Symfony 7.4 / API Platform
 - AI service: Python 3.11+ / FastAPI
 - Local LLM runtime: Ollama (provider adapter; deterministic mock for tests)
@@ -11,18 +12,28 @@ AI-assisted platform to plan, draft, review and approve social-media content for
 - Workflow automation: n8n
 - Local infrastructure: Docker Compose
 
-## Prototype scope
-The first milestone implements a complete, auditable workflow:
-1. Five weekly ideas: three priorities and two reserves.
-2. Capacity planning for two fictional team members.
-3. One complete production brief and channel variants.
-4. Versioned human approval.
-5. A simulated publishing handoff with idempotency.
-6. A weekly text report and four required acceptance scenarios.
+## Current milestone
 
-No real social accounts, customers, publishing APIs or personal data are used. AI output may be deterministic and is clearly labelled as simulated.
+The Symfony backend workflow is implemented and its automated test suite passes locally:
+
+- 2 unit tests and 11 functional acceptance tests.
+- 13 tests passed, 97 assertions, 0 failures (2026-11-19).
+- Weekly planning with five ideas: three priorities and two reserves.
+- Capacity checks for two fictional team members.
+- Brief generation with channel variants and production guidance.
+- Version-bound human review and approval.
+- Simulated, idempotent publishing handoff.
+
+The backend is the source of truth for business rules and workflow state. AI may suggest content, but it cannot approve or publish it.
+
+## Prototype boundaries
+
+No real social accounts, customers, publishing APIs or personal data are used. Media and booking references are placeholders. The handoff persists a simulated payload; it does not publish a post.
+
+The frontend workflow, RAG ingestion/retrieval, connected n8n automations, real publishing, analytics, ROI calculations and comment moderation remain future work. See [docs/IMPLEMENTATION-STATUS.md](docs/IMPLEMENTATION-STATUS.md) for the detailed status and [docs/ACCEPTANCE-TESTS.md](docs/ACCEPTANCE-TESTS.md) for test evidence.
 
 ## Repository layout
+
 - `apps/backend`: Symfony business API
 - `apps/ai-service`: FastAPI AI adapter
 - `apps/frontend`: Vue application
@@ -32,7 +43,16 @@ No real social accounts, customers, publishing APIs or personal data are used. A
 - `docs`: architecture, decisions, test evidence and roadmap
 
 ## Getting started
+
 See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for local setup. Copy `.env.example` to `.env` and never commit secrets.
 
-## Status
-Scaffolding and prototype foundation. Features are labelled as implemented, simulated or planned in the documentation.
+## Verification
+
+Run the backend acceptance suite with the isolated test environment:
+
+```bash
+docker compose exec \
+  -e APP_ENV=test \
+  -e TEST_TOKEN=1 \
+  backend vendor/bin/phpunit --testdox
+```
