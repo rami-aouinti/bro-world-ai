@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { api, ApiError } from './api'
-import type { Assignee, BriefResponse, Channel, ContentIdea, HandoffResponse, WeeklyPlan } from './types'
+import type { Assignee, BriefResponse, Channel, ContentIdea, HandoffResponse, IdeaSuggestion, WeeklyPlan } from './types'
 
 type Page = 'overview' | 'ideas' | 'planning' | 'review'
 
 const page = ref<Page>('overview')
 const ideas = ref<ContentIdea[]>([])
+const aiSuggestions = ref<IdeaSuggestion[]>([])
+const aiProvider = ref('')
+const aiLoading = ref(false)
 const currentPlan = ref<WeeklyPlan | null>(null)
 const loading = ref(false)
 const saving = ref(false)
@@ -243,6 +246,49 @@ async function createIdea(): Promise<void> {
     saving.value = false
   }
 }
+
+
+async function generateAiSuggestions(): Promise<void> {
+  clearMessages()
+  aiLoading.value = true
+  try {
+    const result = await api.generateIdeas({
+      campaign: 'Weekly social media campaign for a fictional optical retailer',
+      audience: newIdea.targetAudience,
+      tone: newIdea.tone,
+      channels: [...newIdea.channels],
+    })
+    aiSuggestions.value = result.ideas
+    aiProvider.value = result.ai.provider + (result.ai.simulated ? ' · simulated' : '')
+    successMessage.value = 'AI generated five suggestions. Review each one before adding it to your library.'
+  } catch (error) {
+    showError(error)
+  } finally {
+    aiLoading.value = false
+  }
+}
+
+async function addAiSuggestion(suggestion: IdeaSuggestion): Promise<void> {
+  clearMessages()
+  saving.value = true
+  try {
+    const created = await api.createIdea({
+      title: suggestion.title,
+      topic: suggestion.topic,
+      targetAudience: suggestion.targetAudience,
+      tone: suggestion.tone,
+      channels: [...suggestion.channels],
+    })
+    ideas.value.unshift(created)
+    aiSuggestions.value = aiSuggestions.value.filter((item) => item !== suggestion)
+    successMessage.value = 'AI suggestion added to your content library. It is still a draft.'
+  } catch (error) {
+    showError(error)
+  } finally {
+    saving.value = false
+  }
+}
+
 
 function togglePlanIdea(id: string): void {
   const exists = selectedPlanIds.value.includes(id)
@@ -532,7 +578,20 @@ function goToPlan(): void {
         </section>
 
         <section v-else-if="page === 'ideas'" class="page-section">
-          <div class="page-heading compact-heading"><div><div class="eyebrow">CONTENT LIBRARY</div><h1>Your ideas, <em>your voice.</em></h1><p>Collect ideas before turning them into a weekly plan.</p></div><button class="primary-button" @click="showIdeaForm = true">＋ Create idea</button></div>
+          <div class="page-heading compact-heading"><div><div class="eyebrow">CONTENT LIBRARY</div><h1>Your ideas, <em>your voice.</em></h1><p>Collect ideas before turning them into a weekly plan.</p></div><div class="heading-buttons"><button class="outline-button" :disabled="aiLoading" @click="generateAiSuggestions">{{ aiLoading ? 'Generating…' : '✦ Generate 5 AI ideas' }}</button><button class="primary-button" @click="showIdeaForm = true">＋ Create idea</button></div></div>
+          <section v-if="aiSuggestions.length" class="panel recent-panel ai-suggestions-panel">
+            <div class="panel-heading"><div><div class="eyebrow">AI-ASSISTED IDEATION</div><h2>Five suggestions to review</h2></div><span class="week-chip">{{ aiProvider }}</span></div>
+            <p class="section-description">These are drafts, not verified trends or approved posts. Add only the ideas you want to keep.</p>
+            <div class="idea-grid">
+              <article v-for="suggestion in aiSuggestions" :key="suggestion.title" class="idea-card">
+                <div class="idea-card-top"><span class="idea-category">AI SUGGESTION</span><span class="status-pill status-draft">Draft</span></div>
+                <h3>{{ suggestion.title }}</h3><p>{{ suggestion.topic }}</p>
+                <div class="idea-meta"><span>Audience</span><strong>{{ suggestion.targetAudience }}</strong></div>
+                <div class="channel-pills"><span v-for="channel in suggestion.channels" :key="channel">{{ channelLabels[channel] }}</span></div>
+                <div class="idea-card-footer"><small>Human selection required</small><button class="outline-button" :disabled="saving" @click="addAiSuggestion(suggestion)">Add to library <span>＋</span></button></div>
+              </article>
+            </div>
+          </section>
           <div class="filter-bar"><label class="search-box"><span>⌕</span><input v-model="searchTerm" placeholder="Search ideas, topics or audience..." /></label><select v-model="statusFilter"><option value="all">All statuses</option><option value="draft">Draft</option><option value="ready_for_planning">Planned</option><option value="review">In review</option><option value="approved">Approved</option><option value="handed_off">Handed off</option></select><span class="result-count">{{ filteredIdeas.length }} ideas</span></div>
           <div v-if="filteredIdeas.length" class="idea-grid"><article v-for="idea in filteredIdeas" :key="idea.id" class="idea-card"><div class="idea-card-top"><span class="idea-category">CONTENT IDEA</span><span class="status-pill" :class="statusClass(idea.status)">{{ statusLabel(idea.status) }}</span></div><h3>{{ idea.title }}</h3><p>{{ idea.topic }}</p><div class="idea-meta"><span>Audience</span><strong>{{ idea.targetAudience }}</strong></div><div class="channel-pills"><span v-for="channel in idea.channels" :key="channel">{{ channelLabels[channel] }}</span></div><div class="idea-card-footer"><small>Added {{ formatDate(idea.createdAt) }}</small><button class="outline-button" @click="openIdea(idea)">Open idea <span>↗</span></button></div></article></div>
           <div v-else class="empty-state large-empty"><div class="empty-illustration">✳</div><h3>{{ ideas.length ? 'No ideas match your filters.' : 'Your idea bank is waiting.' }}</h3><p>{{ ideas.length ? 'Try another search or status.' : 'Create your first content idea and start building your weekly plan.' }}</p><button v-if="!ideas.length" class="primary-button" @click="showIdeaForm = true">Create first idea</button></div>
