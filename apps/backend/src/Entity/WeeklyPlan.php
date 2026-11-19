@@ -8,14 +8,15 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'weekly_plans', uniqueConstraints: [new ORM\UniqueConstraint(name: 'uniq_weekly_plan_start', columns: ['week_start'])])]
+#[ORM\Table(name: 'weekly_plans')]
+#[ORM\UniqueConstraint(name: 'uniq_weekly_plan_start', fields: ['weekStart'])]
 class WeeklyPlan
 {
     #[ORM\Id]
     #[ORM\Column(type: 'guid', length: 36)]
     private string $id;
 
-    #[ORM\Column(name: 'week_start', type: 'date_immutable')]
+    #[ORM\Column(name: 'week_start', type: 'date_immutable', unique: true)]
     private \DateTimeImmutable $weekStart;
 
     #[ORM\Column(name: 'capacity_person_a')]
