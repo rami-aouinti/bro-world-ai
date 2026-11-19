@@ -1,0 +1,29 @@
+{
+  "campaignId": "SYN-CAMPAIGN-SUMMER-2026-001",
+  "campaign": "Summer eyewear awareness",
+  "brand": "Fiktiver Optiker Bro World",
+  "audiences": [
+    "Adults aged 25-45 interested in everyday eyewear",
+    "People working regularly with screens"
+  ],
+  "tone": "friendly, clear, helpful and personal",
+  "seasonalOccasion": "Summer",
+  "channels": [
+    "instagram",
+    "facebook",
+    "linkedin"
+  ],
+  "teamCapacityMinutes": {
+    "personA": 90,
+    "personB": 150
+  },
+  "constraints": [
+    "No medical advice",
+    "No unverified product claims or statistics",
+    "Human review is mandatory",
+    "No real publishing or customer data"
+  ],
+  "bookingUrl": "https://example.invalid/appointment",
+  "mediaReference": "media://sample/summer-eyewear-hero",
+  "note": "All values are synthetic examples for the PHILIPP assignment."
+}
