@@ -19,6 +19,8 @@ final class ContentIdeaTest extends TestCase
             $idea->getId(),
         );
         self::assertSame(ContentIdeaStatus::Draft, $idea->getStatus());
+        $idea->setStatus(ContentIdeaStatus::Review);
+        self::assertSame(ContentIdeaStatus::Review, $idea->getStatus());
         self::assertSame([], $idea->getChannels());
         self::assertInstanceOf(\DateTimeImmutable::class, $idea->getCreatedAt());
     }
