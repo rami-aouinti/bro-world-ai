@@ -6,43 +6,43 @@ Vue 3 + TypeScript + Vite application for the social content workflow.
 
 From the repository root:
 
-\`\`\`bash
+```bash
 docker compose up -d --build frontend
 docker compose logs -f frontend
-\`\`\`
+```
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The Vite development server listens on port 5173 inside the container. Docker maps it to port 3000 on the host. Requests under \`/api\` are proxied to the Symfony service at \`http://backend:8000\`, so browser requests stay same-origin and do not need a separate CORS configuration.
+The Vite development server listens on port 5173 inside the container. Docker maps it to port 3000 on the host. Requests under `/api` are proxied to the Symfony service at `http://backend:8000`, so browser requests stay same-origin and do not need a separate CORS configuration.
 
 To rebuild after dependency or Dockerfile changes:
 
-\`\`\`bash
+```bash
 docker compose up -d --build frontend
-\`\`\`
+```
 
 ## Run outside Docker
 
 Requirements: Node.js 20+ and npm.
 
-\`\`\`bash
+```bash
 cd apps/frontend
 npm install
 VITE_API_PROXY_TARGET=http://localhost:8000 npm run dev -- --host 0.0.0.0
-\`\`\`
+```
 
 Open [http://localhost:5173](http://localhost:5173).
 
 ## Production build
 
-\`\`\`bash
+```bash
 cd apps/frontend
 npm install
 npm run build
 npm run preview -- --host 0.0.0.0
-\`\`\`
+```
 
-The production assets are written to \`dist/\`.
+The production assets are written to `dist/`.
 
 ## Implemented screens
 
@@ -56,15 +56,15 @@ The production assets are written to \`dist/\`.
 
 The frontend uses the Symfony API as its source of truth:
 
-- \`GET/POST /api/content_ideas\`
-- \`POST /api/workflow/weekly-plans\`
-- \`GET /api/workflow/weekly-plans/{id}\`
-- \`POST /api/workflow/content-ideas/{id}/brief\`
-- \`GET /api/workflow/content-ideas/{id}/brief\`
-- \`POST /api/workflow/content-ideas/{id}/review\`
-- \`POST /api/workflow/content-ideas/{id}/approve\`
-- \`POST /api/workflow/content-ideas/{id}/handoff\`
-- \`PATCH /api/workflow/content-ideas/{id}\`
+- `GET/POST /api/content_ideas`
+- `POST /api/workflow/weekly-plans`
+- `GET /api/workflow/weekly-plans/{id}`
+- `POST /api/workflow/content-ideas/{id}/brief`
+- `GET /api/workflow/content-ideas/{id}/brief`
+- `POST /api/workflow/content-ideas/{id}/review`
+- `POST /api/workflow/content-ideas/{id}/approve`
+- `POST /api/workflow/content-ideas/{id}/handoff`
+- `PATCH /api/workflow/content-ideas/{id}`
 
 The current weekly plan ID is kept in browser local storage to reopen the active plan after refresh. The backend currently exposes a plan-by-ID endpoint but no collection/history endpoint.
 
