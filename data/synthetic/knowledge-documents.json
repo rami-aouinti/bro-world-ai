@@ -1,0 +1,29 @@
+[
+  {
+    "sourceId": "SYN-KB-BRAND-001",
+    "title": "Bro World brand voice",
+    "text": "Bro World is a fictional optician brand. The brand voice is friendly, clear, helpful, inclusive and personal. Use short sentences and understandable language. Avoid pressure-based sales copy. Do not invent product specifications, prices, discounts, certifications, medical advice, health outcomes, testimonials or performance metrics. All social content requires human review before handoff.",
+    "metadata": {
+      "kind": "brand-guideline",
+      "synthetic": true
+    }
+  },
+  {
+    "sourceId": "SYN-KB-PRODUCT-001",
+    "title": "Fictional eyewear product information",
+    "text": "This is a fictional product information note. The prototype does not contain verified product specifications, prices, availability, UV ratings or manufacturer claims. Content may invite readers to ask the optician for product details, but must not state technical properties that are not supplied and verified.",
+    "metadata": {
+      "kind": "product-context",
+      "synthetic": true
+    }
+  },
+  {
+    "sourceId": "SYN-KB-APPROVAL-001",
+    "title": "Content approval policy",
+    "text": "AI-generated content is always a draft. A named human reviewer must inspect the exact text, media reference, channel variants and scheduled time. Any edit after approval invalidates the previous approval and requires a new review. Only content with a current matching approval may be handed off. The handoff is simulated and must never publish to a real social network.",
+    "metadata": {
+      "kind": "workflow-policy",
+      "synthetic": true
+    }
+  }
+]
