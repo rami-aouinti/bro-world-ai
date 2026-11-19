@@ -1,0 +1,44 @@
+{
+  "dataset": "Synthetic inspiration findings",
+  "isSynthetic": true,
+  "metricsVerified": false,
+  "findings": [
+    {
+      "sourceId": "SYN-IG-001",
+      "channel": "instagram",
+      "source": "Synthetic Instagram inspiration scan",
+      "observation": "Short vertical videos showing a simple styling or product-selection process can be used as a creative format idea.",
+      "metrics": {
+        "views": null,
+        "engagementRate": null,
+        "reach": null
+      },
+      "confidence": "creative hypothesis only"
+    },
+    {
+      "sourceId": "SYN-TT-002",
+      "channel": "tiktok",
+      "source": "Synthetic TikTok inspiration scan",
+      "observation": "A concise three-point explainer can make a topic easy to follow in a short video.",
+      "metrics": {
+        "views": null,
+        "engagementRate": null,
+        "reach": null
+      },
+      "confidence": "creative hypothesis only"
+    },
+    {
+      "sourceId": "SYN-LI-003",
+      "channel": "linkedin",
+      "source": "Synthetic LinkedIn inspiration scan",
+      "observation": "A professional post about customer consultation and service quality may suit a business-oriented audience.",
+      "metrics": {
+        "impressions": null,
+        "engagementRate": null,
+        "clicks": null
+      },
+      "confidence": "creative hypothesis only"
+    }
+  ],
+  "disclaimer": "These are fictional inspiration notes created for demonstration. They are not measured trends, verified platform findings or evidence of audience performance."
+}
