@@ -8,7 +8,7 @@ No credentials are embedded. URLs use Docker-internal service names.
 
 | Export | Trigger | Responsibility |
 |---|---|---|
-| weekly-ai-planning.json | Monday 08:00 Europe/Berlin and manual webhook | Generate five ideas, persist them in Symfony, create a 3-priority / 2-reserve plan with A=60/90 and B=110/150 minutes. |
+| weekly-ai-planning.json | Monday 08:00 Europe/Berlin and manual webhook | Generate five ideas, persist them in Symfony, create a 3-priority / 2-reserve plan with A=60/90 and B=110/150 minutes, and return a weekly text overview plus an unsent email draft. |
 | ai-content-production.json | Webhook | Ask Symfony to create a brief; Symfony calls FastAPI and persists the result. |
 | approval-email-draft.json | Webhook | Prepare an unsent email draft as JSON. It cannot approve content. |
 | approved-handoff.json | Webhook | Request handoff with an idempotency key; Symfony enforces approval and media checks. |
