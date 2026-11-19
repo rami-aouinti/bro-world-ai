@@ -76,6 +76,7 @@ export interface ContentBriefPayload {
     total: number
   }
   assumptions: string[]
+  ai?: { provider: string; simulated: boolean; knowledgeContextCount: number }
 }
 
 export interface BriefResponse {
