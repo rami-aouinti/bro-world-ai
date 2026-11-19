@@ -46,6 +46,18 @@ curl -X POST http://localhost:8000/api/content_ideas \
 
 The server generates a UUID and new ideas start in `draft`. Supported channels: `instagram`, `facebook`, `tiktok`, `linkedin`.
 
+## AI-assisted idea suggestions
+
+Request five suggestions without persisting them:
+
+```bash
+curl -X POST http://localhost:8000/api/workflow/ai/ideas \
+  -H 'Content-Type: application/json' \
+  -d '{"campaign":"Summer eyewear awareness","audience":"Adults aged 25 to 40","tone":"Friendly and informative","channels":["instagram","facebook"]}'
+```
+
+The response contains five draft suggestions and provider metadata. The frontend lets a human choose which suggestions to add to the content library. See [AI and RAG](../../docs/AI-AND-RAG.md).
+
 ## 2. Weekly planning and capacity
 
 Create five ideas first, then submit a weekly plan with exactly three priority slots and two reserve slots. Each slot must identify its idea, owner (`A` or `B`) and estimated minutes.
@@ -71,7 +83,7 @@ Defaults are 90 minutes for Person A and 150 minutes for Person B. Capacity is c
 
 ## 3. Content brief
 
-Generate a complete deterministic sample brief. `mediaReference` is a required reference to an already selected asset; this prototype does not upload or verify a real file.
+Generate a complete brief through FastAPI. In the local Docker development environment Symfony calls the AI service; in APP_ENV=test it uses a deterministic fallback so acceptance tests do not require Ollama. `mediaReference` is a required reference to an already selected asset; this prototype does not upload or verify a real file.
 
 ```bash
 curl -X POST http://localhost:8000/api/workflow/content-ideas/IDEA_UUID/brief \
@@ -123,8 +135,10 @@ Handoff is allowed only after explicit approval of the current brief hash, a com
 ## Architecture and boundaries
 
 - Symfony/Doctrine owns the business rules and persistent state.
-- The AI service can propose text, but it cannot change lifecycle state or approve content.
-- This implementation uses deterministic sample copy so acceptance tests do not depend on an external model.
+- FastAPI generates five campaign idea suggestions and structured content briefs; Ollama can provide local LLM generation.
+- The default AI provider is deterministic mock. The mock is suitable for contract tests, not for evaluating semantic quality.
+- Symfony validates AI responses and remains the source of truth. AI cannot change lifecycle state or approve content.
+- The optional RAG knowledge base uses PostgreSQL + pgvector; see [AI and RAG](../../docs/AI-AND-RAG.md).
 - The weekly plan has one slot per idea, with three priority and two reserve slots.
 - The brief's effort estimate is illustrative; capacity planning uses the per-slot estimates supplied in the weekly-plan request.
 - Media and booking references are placeholders. Human review is required.
