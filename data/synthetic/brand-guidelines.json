@@ -1,0 +1,33 @@
+{
+  "documentId": "SYN-BRAND-GUIDE-001",
+  "title": "Synthetic brand guidelines - Bro World Optician",
+  "brand": "Fiktiver Optiker Bro World",
+  "language": "English and German",
+  "voice": [
+    "friendly",
+    "clear",
+    "helpful",
+    "personal",
+    "inclusive"
+  ],
+  "writingRules": [
+    "Use short, understandable sentences.",
+    "Explain technical terms when needed.",
+    "Prefer helpful information over aggressive sales language.",
+    "Use a clear call to action without pressure."
+  ],
+  "prohibited": [
+    "Do not invent medical advice or health outcomes.",
+    "Do not invent prices, discounts, product specifications or certifications.",
+    "Do not invent customer testimonials or performance metrics.",
+    "Do not imply that AI-generated content has been approved."
+  ],
+  "visualRules": [
+    "Use clean product photography.",
+    "Prefer natural light and readable contrast.",
+    "Keep text overlays short.",
+    "Use accessible text contrast."
+  ],
+  "approval": "A human reviewer must approve the exact version before handoff.",
+  "synthetic": true
+}
