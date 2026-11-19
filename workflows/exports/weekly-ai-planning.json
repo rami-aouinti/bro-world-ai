@@ -13,7 +13,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "bro-world-ai-weekly-plan",
-        "responseMode": "responseNode",
+        "responseMode": "lastNode",
         "options": {}
       }
     },
@@ -144,23 +144,6 @@
           "timeout": 30000
         }
       }
-    },
-    {
-      "id": "respond-weekly",
-      "name": "Return weekly plan",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.4,
-      "position": [
-        1560,
-        240
-      ],
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ $json }}",
-        "options": {
-          "responseCode": 201
-        }
-      }
     }
   ],
   "connections": {
@@ -224,17 +207,6 @@
         [
           {
             "node": "Create weekly plan in Symfony",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create weekly plan in Symfony": {
-      "main": [
-        [
-          {
-            "node": "Return weekly plan",
             "type": "main",
             "index": 0
           }
