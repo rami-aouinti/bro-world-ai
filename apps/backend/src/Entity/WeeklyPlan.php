@@ -16,7 +16,7 @@ class WeeklyPlan
     #[ORM\Column(type: 'guid', length: 36)]
     private string $id;
 
-    #[ORM\Column(name: 'week_start', type: 'date_immutable', unique: true)]
+    #[ORM\Column(name: 'week_start', type: 'date_immutable')]
     private \DateTimeImmutable $weekStart;
 
     #[ORM\Column(name: 'capacity_person_a')]
