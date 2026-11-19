@@ -144,6 +144,20 @@
           "timeout": 30000
         }
       }
+    },
+    {
+      "id": "weekly-summary",
+      "name": "Create weekly overview and unsent email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        240
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const plan = $input.first().json;\nconst slots = plan.slots || [];\nconst lines = [\n  'Weekly content plan — week of ' + plan.weekStart,\n  'Priorities: ' + slots.filter(slot => slot.type === 'priority').length + ' | Reserves: ' + slots.filter(slot => slot.type === 'reserve').length,\n  'Person A: ' + plan.allocatedMinutes.A + '/' + plan.capacity.A + ' minutes',\n  'Person B: ' + plan.allocatedMinutes.B + '/' + plan.capacity.B + ' minutes',\n  '',\n  ...slots.map((slot, index) => (index + 1) + '. [' + slot.type + '] ' + slot.title + ' — Person ' + slot.assignee + ', ' + slot.estimatedMinutes + ' min'),\n  '',\n  'All AI suggestions remain drafts. A human must review and approve each exact content version before handoff.'\n];\nconst overview = lines.join('\\n');\nreturn [{ json: { weeklyPlan: plan, weeklyOverview: overview, emailDraft: { delivery: 'not_sent', to: 'reviewer@example.invalid', subject: 'Bro World AI weekly content plan — ' + plan.weekStart, body: overview, requiresHumanReview: true } } }];"
+      }
     }
   ],
   "connections": {
@@ -207,6 +221,17 @@
         [
           {
             "node": "Create weekly plan in Symfony",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create weekly plan in Symfony": {
+      "main": [
+        [
+          {
+            "node": "Create weekly overview and unsent email",
             "type": "main",
             "index": 0
           }
