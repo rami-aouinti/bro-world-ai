@@ -19,7 +19,7 @@ Last updated: 2026-11-19
 - Deterministic mock provider is the default; Ollama is an optional local generation and embedding provider.
 - Symfony calls FastAPI for brief generation in local Docker development. Functional tests use a deterministic backend fallback and do not require Ollama.
 - pgvector stores 768-dimensional knowledge chunks with source IDs and metadata.
-- Sample brand, product and approval documents can be ingested with python scripts/ingest-knowledge.py.
+- Sample brand, product, approval and inspiration documents can be ingested with python scripts/ingest-knowledge.py; retrieved source IDs are returned with AI suggestions and briefs.
 - Mock embedding is a stable hash vector used only to test storage/retrieval plumbing. It is not semantic search. Use Ollama + nomic-embed-text for semantic embeddings.
 
 ### n8n
