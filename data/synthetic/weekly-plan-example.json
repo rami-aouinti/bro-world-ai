@@ -1,0 +1,46 @@
+{
+  "weekStart": "2026-11-23",
+  "capacityPersonA": 90,
+  "capacityPersonB": 150,
+  "slots": [
+    {
+      "ideaId": "SYN-IDEA-001",
+      "type": "priority",
+      "assignee": "A",
+      "estimatedMinutes": 30
+    },
+    {
+      "ideaId": "SYN-IDEA-002",
+      "type": "priority",
+      "assignee": "A",
+      "estimatedMinutes": 30
+    },
+    {
+      "ideaId": "SYN-IDEA-003",
+      "type": "priority",
+      "assignee": "B",
+      "estimatedMinutes": 40
+    },
+    {
+      "ideaId": "SYN-IDEA-004",
+      "type": "reserve",
+      "assignee": "B",
+      "estimatedMinutes": 40
+    },
+    {
+      "ideaId": "SYN-IDEA-005",
+      "type": "reserve",
+      "assignee": "B",
+      "estimatedMinutes": 30
+    }
+  ],
+  "allocatedMinutes": {
+    "A": 60,
+    "B": 110
+  },
+  "remainingMinutes": {
+    "A": 30,
+    "B": 40
+  },
+  "note": "Illustrative payload only. Replace synthetic IDs with actual ContentIdea UUIDs before calling Symfony."
+}
