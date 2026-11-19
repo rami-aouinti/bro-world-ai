@@ -158,6 +158,13 @@ class ContentIdea
         return $this->status;
     }
 
+    public function setStatus(ContentIdeaStatus $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
