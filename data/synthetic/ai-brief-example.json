@@ -1,0 +1,61 @@
+{
+  "idea": {
+    "id": "SYN-IDEA-001",
+    "title": "Summer eyewear awareness",
+    "topic": "Choosing sunglasses for summer",
+    "audience": "Adults aged 25-45",
+    "tone": "friendly and helpful"
+  },
+  "channels": [
+    "instagram",
+    "facebook"
+  ],
+  "scheduledAt": "2026-11-25T10:00:00+01:00",
+  "hook": "Eine Brille, die zu deinem Alltag passt: Choosing sunglasses for summer.",
+  "masterCopy": "Choosing sunglasses for summer. Wir zeigen dir, worauf es ankommt, und beraten dich persönlich.",
+  "productionPlan": {
+    "format": "Product photo or short vertical video",
+    "steps": [
+      "Prepare the selected product and a clean shooting location",
+      "Create the visual and channel-specific copy",
+      "Check accessibility, brand tone and factual accuracy",
+      "Export variants and request human approval"
+    ]
+  },
+  "visual": {
+    "overlay": "Summer eyewear awareness",
+    "titleImage": "Clean product photography, natural daylight, accessible contrast",
+    "mediaReference": "media://sample/summer-eyewear-hero"
+  },
+  "bookingLink": "https://example.invalid/appointment",
+  "channelVariants": {
+    "instagram": {
+      "copy": "Choosing sunglasses for summer. Wir zeigen dir, worauf es ankommt. Speichere diesen Beitrag für später.",
+      "format": "feed post + story",
+      "cta": "Termin vereinbaren"
+    },
+    "facebook": {
+      "copy": "Choosing sunglasses for summer. Wir zeigen dir, worauf es ankommt. Wir freuen uns auf deine Fragen.",
+      "format": "feed post",
+      "cta": "Mehr erfahren"
+    }
+  },
+  "effortMinutes": {
+    "research": 15,
+    "copyAndVariants": 25,
+    "production": 35,
+    "coordinationAndApproval": 15,
+    "total": 90
+  },
+  "assumptions": [
+    "AI output is a draft and requires human review.",
+    "Booking URL and media reference are placeholders.",
+    "No social network is contacted and no post is published."
+  ],
+  "ai": {
+    "provider": "deterministic-mock",
+    "simulated": true,
+    "knowledgeContextCount": 0
+  },
+  "synthetic": true
+}
