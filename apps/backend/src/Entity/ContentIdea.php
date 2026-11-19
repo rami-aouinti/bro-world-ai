@@ -15,7 +15,8 @@ use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'content_ideas', indexes: [new ORM\Index(name: 'idx_content_ideas_status', columns: ['status'])])]
+#[ORM\Table(name: 'content_ideas')]
+#[ORM\Index(name: 'idx_content_ideas_status', fields: ['status'])]
 #[ORM\HasLifecycleCallbacks]
 #[ApiResource(
     operations: [
