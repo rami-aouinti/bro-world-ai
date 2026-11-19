@@ -208,9 +208,10 @@ final class WorkflowController
 
         $existing = $this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea]);
         if ($existing) {
-            $this->entityManager->remove($existing);
+            $existing->replacePayload($payload, $hash);
+        } else {
+            $this->entityManager->persist(new ContentBrief($idea, $payload, $hash));
         }
-        $this->entityManager->persist(new ContentBrief($idea, $payload, $hash));
         $idea->setStatus(ContentIdeaStatus::Draft);
         $this->entityManager->flush();
 
