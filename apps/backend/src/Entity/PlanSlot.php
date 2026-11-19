@@ -22,7 +22,7 @@ class PlanSlot
     private WeeklyPlan $weeklyPlan;
 
     #[ORM\ManyToOne(targetEntity: ContentIdea::class)]
-    #[ORM\JoinColumn(name: 'content_idea_id', nullable: false, unique: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'content_idea_id', nullable: false, onDelete: 'CASCADE')]
     private ContentIdea $contentIdea;
 
     #[ORM\Column(name: 'slot_type', length: 20)]
