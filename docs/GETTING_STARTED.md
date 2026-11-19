@@ -15,12 +15,14 @@ docker compose ps
 ```
 
 Services:
+- Frontend (Vue 3): http://localhost:3000
+- Symfony API: http://localhost:8000/api
 - PostgreSQL + pgvector: localhost:5432
 - Ollama: localhost:11434
 - n8n: http://localhost:5678
 - FastAPI: http://localhost:8001/docs
 
-The default AI provider is `mock`, so tests do not require a downloaded model or an API key.
+The default AI provider is `mock`, so tests do not require a downloaded model or an API key. The frontend proxies browser requests from `/api` to the Symfony backend through the Docker network.
 
 ## Optional: enable Ollama
 
@@ -50,3 +52,14 @@ pytest
 
 ## Safety
 Never use real social-media accounts or customer data. Never commit `.env` or API credentials. Handoff is simulated; no real post is published.
+
+## Frontend development
+
+The frontend starts with the full Docker Compose stack. To rebuild or restart only the frontend:
+
+```bash
+docker compose up -d --build frontend
+docker compose logs -f frontend
+```
+
+Open http://localhost:3000. See [apps/frontend/README.md](../apps/frontend/README.md) for standalone Node.js development and production build commands.
