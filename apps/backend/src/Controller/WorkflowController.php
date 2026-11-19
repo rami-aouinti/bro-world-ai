@@ -260,11 +260,20 @@ final class WorkflowController
         if ($idea->getStatus() !== ContentIdeaStatus::Review) {
             return $this->error('Only content in review can be approved.', 409);
         }
+        $brief = $this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea]);
+        if (!$brief) {
+            return $this->error('The reviewed brief no longer exists.', 409);
+        }
+        $approval = $this->entityManager->getRepository(ContentApproval::class)->findOneBy(['contentIdea' => $idea]);
+        if ($approval) {
+            $this->entityManager->remove($approval);
+        }
+        $approval = new ContentApproval($idea, $brief->getVersionHash());
+        $this->entityManager->persist($approval);
         $idea->setStatus(ContentIdeaStatus::Approved);
         $this->entityManager->flush();
-        $brief = $this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea]);
 
-        return new JsonResponse(['ideaId' => $id, 'status' => $idea->getStatus()->value, 'approvedVersionHash' => $brief->getVersionHash()]);
+        return new JsonResponse(['ideaId' => $id, 'status' => $idea->getStatus()->value, 'approvedVersionHash' => $approval->getVersionHash(), 'approvedAt' => $approval->getApprovedAt()->format(DATE_ATOM)]);
     }
 
     #[Route('/content-ideas/{id}/handoff', name: 'workflow_handoff', methods: ['POST'])]
@@ -290,8 +299,12 @@ final class WorkflowController
             return $this->error('Only explicitly approved content can be handed off.', 409);
         }
         $brief = $this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea]);
+        $approval = $this->entityManager->getRepository(ContentApproval::class)->findOneBy(['contentIdea' => $idea]);
         if (!$brief || empty($brief->getPayload()['visual']['mediaReference'])) {
             return $this->error('A media reference is required for handoff.');
+        }
+        if (!$approval || !hash_equals($approval->getVersionHash(), $brief->getVersionHash())) {
+            return $this->error('The current brief version has no matching approval. Review and approve this exact version first.', 409);
         }
 
         $payload = [
@@ -344,6 +357,8 @@ final class WorkflowController
         }
         $brief = $this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea]);
         if ($brief) { $this->entityManager->remove($brief); }
+        $approval = $this->entityManager->getRepository(ContentApproval::class)->findOneBy(['contentIdea' => $idea]);
+        if ($approval) { $this->entityManager->remove($approval); }
         $idea->setStatus(ContentIdeaStatus::Draft);
         $this->entityManager->flush();
 
