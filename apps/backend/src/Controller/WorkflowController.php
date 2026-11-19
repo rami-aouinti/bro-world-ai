@@ -128,6 +128,38 @@ final class WorkflowController
         ], 201);
     }
 
+    #[Route('/weekly-plans/{id}', name: 'workflow_get_weekly_plan', methods: ['GET'])]
+    public function getWeeklyPlan(string $id): JsonResponse
+    {
+        $plan = $this->entityManager->getRepository(WeeklyPlan::class)->find($id);
+        if (!$plan) {
+            return $this->error('Weekly plan not found.', 404);
+        }
+        $slots = $this->entityManager->getRepository(PlanSlot::class)->findBy(['weeklyPlan' => $plan]);
+        $allocated = ['A' => 0, 'B' => 0];
+        $items = [];
+        foreach ($slots as $slot) {
+            $allocated[$slot->getAssignee()] += $slot->getEstimatedMinutes();
+            $items[] = [
+                'ideaId' => $slot->getContentIdea()->getId(),
+                'title' => $slot->getContentIdea()->getTitle(),
+                'type' => $slot->getSlotType(),
+                'assignee' => $slot->getAssignee(),
+                'estimatedMinutes' => $slot->getEstimatedMinutes(),
+            ];
+        }
+
+        return new JsonResponse([
+            'id' => $plan->getId(),
+            'weekStart' => $plan->getWeekStart()->format('Y-m-d'),
+            'status' => $plan->getStatus(),
+            'capacity' => ['A' => $plan->getCapacityPersonA(), 'B' => $plan->getCapacityPersonB()],
+            'allocatedMinutes' => $allocated,
+            'remainingMinutes' => ['A' => $plan->getCapacityPersonA() - $allocated['A'], 'B' => $plan->getCapacityPersonB() - $allocated['B']],
+            'slots' => $items,
+        ]);
+    }
+
     #[Route('/content-ideas/{id}/brief', name: 'workflow_generate_brief', methods: ['POST'])]
     public function generateBrief(string $id, Request $request): JsonResponse
     {
@@ -183,6 +215,17 @@ final class WorkflowController
         $this->entityManager->flush();
 
         return new JsonResponse(['ideaId' => $id, 'versionHash' => $hash, 'brief' => $payload], 201);
+    }
+
+    #[Route('/content-ideas/{id}/brief', name: 'workflow_get_brief', methods: ['GET'])]
+    public function getBrief(string $id): JsonResponse
+    {
+        $idea = $this->findIdea($id);
+        if ($idea instanceof JsonResponse) { return $idea; }
+        $brief = $this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea]);
+        if (!$brief) { return $this->error('Content brief not found.', 404); }
+
+        return new JsonResponse(['ideaId' => $id, 'versionHash' => $brief->getVersionHash(), 'createdAt' => $brief->getCreatedAt()->format(DATE_ATOM), 'brief' => $brief->getPayload()]);
     }
 
     #[Route('/content-ideas/{id}/review', name: 'workflow_submit_review', methods: ['POST'])]
