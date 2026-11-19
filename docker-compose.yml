@@ -76,6 +76,7 @@ services:
       APP_DEBUG: "1"
       APP_SECRET: ${APP_SECRET:-local-development-secret-change-before-deployment}
       DEFAULT_URI: "http://localhost"
+      CORS_ALLOW_ORIGIN: '^https?://(localhost|127\\.0\\.0\\.1)(:[0-9]+)?$'
       DATABASE_URL: "postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-change-me-local-only}@postgres:5432/${POSTGRES_DB:-bro_world_ai}?serverVersion=16&charset=utf8"
     volumes:
       - ./apps/backend:/app
