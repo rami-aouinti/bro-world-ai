@@ -99,7 +99,7 @@ Explicitly approve the reviewed version:
 curl -X POST http://localhost:8000/api/workflow/content-ideas/IDEA_UUID/approve
 ```
 
-Only an idea with a complete brief and media reference can enter review. Only an idea in `review` can be approved. Approval response includes the SHA-256 hash of the approved brief version.
+Only an idea with a complete brief and media reference can enter review. Only an idea in `review` can be approved. Approval creates a persistent approval record containing the SHA-256 hash of the exact approved brief and its timestamp. Handoff verifies that the current brief hash still matches this approval record.
 
 Edit a non-handed-off idea with PATCH:
 
@@ -109,7 +109,7 @@ curl -X PATCH http://localhost:8000/api/workflow/content-ideas/IDEA_UUID \
   -d '{"title":"Updated title"}'
 ```
 
-Any edit invalidates the prior brief and approval by removing the previous brief and resetting the idea to `draft`. Regenerate the brief and repeat review/approval. Handed-off content is immutable; create a new idea for a later revision.
+Any edit invalidates the prior brief and approval by removing both records and resetting the idea to `draft`. Regenerate the brief and repeat review/approval. Handed-off content is immutable; create a new idea for a later revision.
 
 ## 5. Idempotent simulated handoff
 
