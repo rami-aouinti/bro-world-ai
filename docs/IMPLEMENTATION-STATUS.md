@@ -2,63 +2,64 @@
 
 Last updated: 2026-11-19
 
-## Implemented
+## Implemented in master
 
-- Docker Compose infrastructure for PostgreSQL/pgvector, Ollama, n8n, FastAPI and Symfony.
-- Symfony 7.4 + API Platform ContentIdea resource backed by Doctrine/PostgreSQL.
-- FastAPI AI adapter with deterministic mock provider by default and optional Ollama provider.
-- Weekly plan creation and retrieval: exactly five distinct ideas, three priority and two reserve.
-- Capacity allocation for Person A (90 minutes) and Person B (150 minutes by default), with explicit HTTP 422 over-capacity details.
-- Deterministic content brief generation with hook, master copy, production plan, visual direction, placeholder booking URL, channel-specific variants and effort estimate.
-- Review and approval lifecycle with a persisted SHA-256 snapshot bound to the exact brief version.
-- PATCH editing that invalidates the old brief and approval and returns the idea to draft.
-- Simulated handoff guarded by approval and media reference, with a database unique idempotency key and replay response.
-- Backend usage documentation and acceptance test suite.
-- Vue 3 + TypeScript + Vite frontend with overview dashboard, idea library, weekly planning, team capacity allocation, review queue, brief editor, version-aware approval actions and simulated handoff.
-- Docker Compose frontend service exposed on host port 3000; Vite proxies /api requests to Symfony.
+### Core application
+- Symfony 7.4 + API Platform + Doctrine/PostgreSQL owns the business workflow and state.
+- Vue 3 + TypeScript + Vite frontend provides overview, ideas, weekly planning, capacity allocation, brief editing, review, approval and simulated handoff.
+- Weekly plans require exactly five distinct ideas: three priorities and two reserves.
+- Default weekly capacity is Person A=90 minutes and Person B=150 minutes. Over-capacity requests return HTTP 422.
+- Briefs require a media reference and scheduled time.
+- Review and approval are human-controlled and bound to the exact brief version hash.
+- Editing invalidates the old brief and approval.
+- Simulated handoff checks approval, assignment and media reference and uses a unique idempotency key.
 
-## Local verification completed (2026-11-19)
+### AI service and RAG
+- FastAPI exposes /api/v1/generate, /api/v1/ideas, /api/v1/brief, /api/v1/knowledge and /api/v1/retrieve.
+- Deterministic mock provider is the default; Ollama is an optional local generation and embedding provider.
+- Symfony calls FastAPI for brief generation in local Docker development. Functional tests use a deterministic backend fallback and do not require Ollama.
+- pgvector stores 768-dimensional knowledge chunks with source IDs and metadata.
+- Sample brand, product and approval documents can be ingested with python scripts/ingest-knowledge.py.
+- Mock embedding is a stable hash vector used only to test storage/retrieval plumbing. It is not semantic search. Use Ollama + nomic-embed-text for semantic embeddings.
 
-- Docker Compose backend was built and started.
-- Doctrine migrations through `Version20261119140100` were executed against the dedicated test database `bro_world_ai_test1`.
-- `doctrine:schema:validate --env=test` confirmed that Doctrine mapping and database schema are in sync.
-- PHPUnit was run with `APP_ENV=test` and `TEST_TOKEN=1`.
-- Result: **13 tests passed, 97 assertions, 0 failures** (2 unit tests and 11 workflow acceptance tests, AT-01 to AT-11).
-- The test database is isolated from the development database by the `_test1` suffix.
+### n8n
+- Four importable exports exist in workflows/exports: weekly AI planning, AI content production, approval email draft and approved handoff.
+- Weekly planning creates five AI-suggested ideas and a capacity-safe plan.
+- Content production delegates to Symfony, which calls FastAPI.
+- Approval notification produces an unsent email draft; it does not send mail or approve content.
+- Handoff calls Symfony and remains simulated; Symfony enforces approval and idempotency.
+- Workflows must be imported and activated in the local n8n UI before they execute.
 
-Reproducible test command from the repository root:
+### Synthetic assignment material
+- Campaign input, three synthetic inspiration findings with channel/source IDs, synthetic brand guidelines, RAG documents, weekly plan example, AI brief example and unsent email draft are in data/synthetic.
+- Unknown inspiration metrics are explicitly null. Findings are fictional creative hypotheses, not verified trends.
 
-```bash
-docker compose exec \
-  -e APP_ENV=test \
-  -e TEST_TOKEN=1 \
-  backend vendor/bin/phpunit --testdox
-```
+## Previously verified backend baseline
+On 2026-11-19, before the AI/RAG integration changes, PHPUnit reported 13 tests passed, 97 assertions, 0 failures (2 unit and 11 functional acceptance tests).
 
-Apply development migrations and validate the development schema separately:
-
-```bash
-docker compose exec backend php bin/console doctrine:migrations:migrate --no-interaction
-docker compose exec backend php bin/console doctrine:schema:validate
-```
-
-## Frontend verification status
-
-- Frontend source, Dockerfile, Vite proxy and Docker Compose service are committed on `master`.
-- The frontend build and browser workflow have **not yet been executed locally**. Run the frontend startup and production build checks described in `apps/frontend/README.md` before reporting frontend verification as passed.
+The latest AI/RAG and Symfony-to-FastAPI changes are committed to master, but still require local verification after pulling:
+- Docker Compose config and rebuild.
+- FastAPI pytest suite.
+- Symfony PHPUnit suite and Doctrine schema validation.
+- Real Ollama generation after pulling both models.
+- pgvector ingestion and retrieval with Ollama embeddings.
+- Import and manual execution of each n8n workflow.
+- Browser-level end-to-end workflow.
 
 ## Simulated / not connected to external services
+- Default AI mock output is deterministic. Actual model generation requires AI_PROVIDER=ollama and pulling the models.
+- Mock embeddings are not semantically meaningful.
+- Social publishing handoff persists a payload only. No social network is contacted.
+- Media references and booking URLs are placeholders.
+- Approval email is a JSON draft only; no email is sent.
+- All sample brand, inspiration, people, ideas, sources and metrics are synthetic.
 
-- AI generation is deterministic when `AI_PROVIDER=mock`; Ollama is an optional local provider.
-- Social publishing handoff persists a payload only. No social network is contacted and no post is published.
-- Media references and booking URLs in sample briefs are placeholders; the prototype does not upload or verify media.
-- Sample brand, people, ideas, source references and metrics are synthetic.
+## Not implemented
+- Real social network publishing.
+- Real analytics ingestion, ROI calculations or dashboard.
+- Comment moderation workflow with human review.
+- Real media upload/asset storage and booking integration.
+- Automated browser E2E and frontend component tests.
+- Production authentication, secrets management, monitoring and deployment hardening.
 
-## Not implemented yet
-
-- Frontend end-to-end browser tests and automated frontend component tests.
-- RAG ingestion, chunking, embeddings and retrieval.
-- Exported/connected n8n workflow definitions and real notifications.
-- Real social network publishing, analytics calculations, ROI dashboard and comment moderation.
-
-Do not describe planned features or static example fixtures as implemented behavior. Keep implemented, simulated and planned capabilities clearly separated.
+Do not report features as locally verified until the commands and manual checks above have been run.
