@@ -18,8 +18,10 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/workflow')]
 final class WorkflowController
 {
-    public function __construct(private readonly EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly ValidatorInterface $validator,
+    ) {
     }
 
     #[Route('/weekly-plans', name: 'workflow_create_weekly_plan', methods: ['POST'])]
@@ -314,6 +316,9 @@ final class WorkflowController
         }
         $data = $this->body($request);
         if ($data instanceof JsonResponse) { return $data; }
+        if (array_key_exists('channels', $data) && !is_array($data['channels'])) {
+            return $this->error('channels must be an array.');
+        }
         foreach (['title', 'topic', 'targetAudience', 'tone', 'channels'] as $field) {
             if (!array_key_exists($field, $data)) { continue; }
             match ($field) {
@@ -321,8 +326,17 @@ final class WorkflowController
                 'topic' => $idea->setTopic((string) $data[$field]),
                 'targetAudience' => $idea->setTargetAudience((string) $data[$field]),
                 'tone' => $idea->setTone((string) $data[$field]),
-                'channels' => is_array($data[$field]) ? $idea->setChannels($data[$field]) : throw new \\InvalidArgumentException('channels must be an array.'),
+                'channels' => $idea->setChannels($data[$field]),
             };
+        }
+        $violations = $this->validator->validate($idea);
+        if (count($violations) > 0) {
+            $messages = [];
+            foreach ($violations as $violation) {
+                $messages[] = ['field' => $violation->getPropertyPath(), 'message' => $violation->getMessage()];
+            }
+
+            return new JsonResponse(['error' => 'Content idea validation failed.', 'violations' => $messages], 422);
         }
         $brief = $this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea]);
         if ($brief) { $this->entityManager->remove($brief); }
