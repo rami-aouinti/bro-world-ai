@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\ContentApproval;
 use App\Entity\ContentBrief;
 use App\Entity\ContentHandoff;
 use App\Entity\ContentIdea;
