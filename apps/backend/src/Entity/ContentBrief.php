@@ -17,7 +17,7 @@ class ContentBrief
     private string $id;
 
     #[ORM\OneToOne(targetEntity: ContentIdea::class)]
-    #[ORM\JoinColumn(name: 'content_idea_id', nullable: false, unique: true, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'content_idea_id', nullable: false, onDelete: 'CASCADE')]
     private ContentIdea $contentIdea;
 
     #[ORM\Column(type: 'json')]
