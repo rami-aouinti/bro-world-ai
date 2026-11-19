@@ -1,14 +1,15 @@
 # Required acceptance scenarios
 
-The Symfony workflow API has an automated functional acceptance suite. The scenarios below were executed locally on 2026-11-19 against the dedicated test database `bro_world_ai_test1`.
+The Symfony workflow API has an automated functional acceptance suite. AT-01 through AT-11 were executed locally on 2026-11-19 against the dedicated test database `bro_world_ai_test1`. A new AI suggestion endpoint test (AT-12) has since been added and still requires a local run.
 
-## Results
+## Previously verified results
 
-<badge>13/13 PHPUnit tests passed</badge>
+<badge>13/13 baseline PHPUnit tests passed</badge>
 
 - 2 unit tests passed.
 - 11 functional acceptance tests passed (AT-01 through AT-11).
 - 97 assertions, 0 failures.
+- AT-12 is additional and has not yet been included in a verified test run.
 
 | ID | Scenario | Expected result | Result |
 |---|---|---|---|
@@ -23,6 +24,7 @@ The Symfony workflow API has an automated functional acceptance suite. The scena
 | AT-09 | Reuse an idempotency key for a different content idea | HTTP 409 | Passed |
 | AT-10 | Edit an approved idea using PATCH | State resets to draft, previous brief is deleted and approval is invalidated | Passed |
 | AT-11 | Edit content after it has been handed off | HTTP 409; handed-off record remains immutable | Passed |
+| AT-12 | Request AI idea suggestions in test mode | Five deterministic suggestions returned; no content ideas persisted | Added; pending local run |
 
 ## Reproduce locally
 
@@ -44,4 +46,5 @@ The test suite truncates its workflow tables before each functional test. Ensure
 - These tests verify the Symfony backend workflow and persistence behavior. They are not end-to-end browser tests.
 - Handoff is simulated only. No social network is contacted and no content is published.
 - The suite verifies sequential retries with the same idempotency key. It does not currently prove race-free behavior under simultaneous concurrent requests.
-- AI generation, media upload, notifications, analytics and ROI are not covered by these acceptance tests.
+- AT-12 covers only the Symfony test fallback. The FastAPI pytest suite, real Ollama generation, pgvector retrieval and n8n workflow execution require separate verification.
+- Media upload, real notifications, analytics and ROI are not covered by these acceptance tests.
