@@ -24,13 +24,12 @@ export class ApiError extends Error {
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   let response: Response
   try {
+    const headers = new Headers(options.headers)
+    if (!headers.has('Accept')) headers.set('Accept', 'application/ld+json, application/json')
+    if (options.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
     response = await fetch(API_BASE + path, {
       ...options,
-      headers: {
-        Accept: 'application/ld+json, application/json',
-        ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-        ...options.headers,
-      },
+      headers,
     })
   } catch {
     throw new ApiError('Cannot reach the Symfony API. Check that Docker services are running.', 0)
