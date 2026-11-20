@@ -116,7 +116,7 @@ final class WeeklyPlanService
             $overCapacity['B'] = ['plannedMinutes' => $used['B'], 'capacityMinutes' => $capacityB, 'overByMinutes' => $used['B'] - $capacityB];
         }
         if ($overCapacity !== []) {
-            return WorkflowResult::success(['error' => 'Capacity exceeded. Re-plan or increase capacity explicitly.', 'capacityWarnings' => $overCapacity], 422);
+            return new WorkflowResult(['error' => 'Capacity exceeded. Re-plan or increase capacity explicitly.', 'capacityWarnings' => $overCapacity], 422);
         }
 
         $connection = $this->entityManager->getConnection();
