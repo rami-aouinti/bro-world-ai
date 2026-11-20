@@ -13,7 +13,6 @@ const showForm = ref(false)
 const form = reactive({ title:'', topic:'', targetAudience:'Adults aged 25 to 40', tone:'Friendly and informative', channels:['instagram','facebook'] as Channel[] })
 const aiForm = reactive({ audience:'Adults aged 25 to 40', tone:'Friendly, modern and informative', channels:['instagram','tiktok'] as Channel[] })
 const filtered = computed(()=>state.ideas.filter(i=>[i.title,i.topic,i.targetAudience].some(v=>v.toLowerCase().includes(search.value.toLowerCase()))))
-function toggle(list:Channel[], channel:Channel, setter:(v:Channel[])=>void){ setter(list.includes(channel)?list.filter(x=>x!==channel):[...list,channel]) }
 function toggleForm(c:Channel){ form.channels=form.channels.includes(c)?form.channels.filter(x=>x!==c):[...form.channels,c] }
 function toggleAi(c:Channel){ aiForm.channels=aiForm.channels.includes(c)?aiForm.channels.filter(x=>x!==c):[...aiForm.channels,c] }
 async function submit(){ const result=await createIdea({...form,channels:[...form.channels]}); if(result){showForm.value=false;form.title='';form.topic=''} }
