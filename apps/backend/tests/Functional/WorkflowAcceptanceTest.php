@@ -350,6 +350,55 @@ final class WorkflowAcceptanceTest extends WebTestCase
         return (string) $connection->fetchOne("SELECT jsonb_array_length(channels::jsonb) FROM content_ideas WHERE id = ?", [$ideaId]);
     }
 
+    public function testAt15RejectsInvalidIdeaValuesWithoutMutatingTheManagedEntity(): void
+    {
+        $ideaId = $this->createIdeas(1)[0];
+
+        $this->patchJson('/api/workflow/content-ideas/'.$ideaId, ['topic' => '']);
+
+        self::assertSame(422, $this->client->getResponse()->getStatusCode());
+        self::assertSame('Eyewear topic 1', $this->storedIdeaTopic($ideaId));
+    }
+
+    public function testAt16RejectsMalformedWeeklyPlanFieldTypes(): void
+    {
+        $this->postJson('/api/workflow/weekly-plans', [
+            'weekStart' => ['not' => 'a date'],
+            'slots' => [],
+        ]);
+
+        self::assertSame(400, $this->client->getResponse()->getStatusCode());
+        self::assertSame('0', $this->countRows('weekly_plans'));
+    }
+
+    public function testAt17RejectsMalformedSlotIdeaIdTypes(): void
+    {
+        $ideas = $this->createIdeas(5);
+        $slots = $this->buildSlots($ideas);
+        $slots[0]['ideaId'] = ['invalid' => 'uuid'];
+
+        $this->postJson('/api/workflow/weekly-plans', [
+            'weekStart' => '2027-01-04',
+            'slots' => $slots,
+        ]);
+
+        self::assertSame(400, $this->client->getResponse()->getStatusCode());
+        self::assertSame('0', $this->countRows('weekly_plans'));
+    }
+
+    public function testAt18RejectsNonStringAiIdeaGenerationFields(): void
+    {
+        $this->postJson('/api/workflow/ai/ideas', [
+            'campaign' => ['unexpected' => 'array'],
+            'audience' => 'Adults aged 25 to 40',
+            'tone' => 'Friendly',
+            'channels' => ['instagram'],
+        ]);
+
+        self::assertSame(400, $this->client->getResponse()->getStatusCode());
+        self::assertSame('0', $this->countRows('content_ideas'));
+    }
+
     /**
      * @return list<string>
      */
