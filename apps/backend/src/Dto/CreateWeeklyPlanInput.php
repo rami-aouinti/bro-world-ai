@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Dto;
 
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 final class CreateWeeklyPlanInput
 {
@@ -17,6 +18,16 @@ final class CreateWeeklyPlanInput
         #[Assert\All([new Assert\Type('array')])]
         public readonly mixed $slots,
     ) {
+    }
+
+    #[Assert\Callback]
+    public function validateSlotList(ExecutionContextInterface $context): void
+    {
+        if (is_array($this->slots) && !array_is_list($this->slots)) {
+            $context->buildViolation('slots must be a list.')
+                ->atPath('slots')
+                ->addViolation();
+        }
     }
 
     /** @param array<string, mixed> $payload */
