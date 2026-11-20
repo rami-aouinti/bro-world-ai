@@ -43,7 +43,7 @@ jobs:
             const repo = context.repo.repo;
             const branch = 'automation/backend-dto-httpclient';
             const { data: ref } = await github.rest.git.getRef({ owner, repo, ref: 'heads/' + branch });
-            const { data: parent } = await github.rest.git.getCommit({ owner, repo, ref: ref.object.sha });
+            const { data: parent } = await github.rest.git.getCommit({ owner, repo, commit_sha: ref.object.sha });
             const { data: blob } = await github.rest.git.createBlob({
               owner,
               repo,
