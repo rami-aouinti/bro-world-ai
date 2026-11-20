@@ -23,6 +23,24 @@ final class WorkflowAcceptanceTest extends WebTestCase
         );
     }
 
+    public function testResponsesExposeAndPreserveARequestId(): void
+    {
+        $this->client->request('GET', '/api/workflow/weekly-plans/not-a-real-id', [], [], [
+            'HTTP_X_REQUEST_ID' => 'acceptance-trace-2026-01',
+        ]);
+
+        self::assertSame(404, $this->client->getResponse()->getStatusCode());
+        self::assertSame('acceptance-trace-2026-01', $this->client->getResponse()->headers->get('X-Request-Id'));
+    }
+
+    public function testMissingContentIdeaReturnsNotFound(): void
+    {
+        $this->client->request('POST', '/api/workflow/content-ideas/00000000-0000-4000-8000-000000000000/review');
+
+        self::assertSame(404, $this->client->getResponse()->getStatusCode());
+        self::assertSame('Content idea not found.', $this->responseData()['error']);
+    }
+
     public function testAiIdeaSuggestionsReturnFiveDraftsWithoutPersistingThem(): void
     {
         $this->postJson('/api/workflow/ai/ideas', [

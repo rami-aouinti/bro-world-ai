@@ -108,14 +108,29 @@ final class WorkflowController
             return $this->error('A weekly plan already exists for this weekStart.', 409);
         }
 
-        $used = ['A' => 0, 'B' => 0];
-        $seenIdeas = [];
-        $resolved = [];
+        $ideaIds = [];
         foreach ($slots as $slot) {
             if (!is_array($slot)) {
                 return $this->error('Each slot must be an object.');
             }
-            $ideaId = (string) ($slot['ideaId'] ?? '');
+            $ideaId = trim((string) ($slot['ideaId'] ?? ''));
+            if ($ideaId === '') {
+                return $this->error('Each slot must contain a valid ideaId.');
+            }
+            $ideaIds[] = $ideaId;
+        }
+
+        // Load all referenced ideas in one query instead of one query per slot.
+        $ideasById = [];
+        foreach ($this->entityManager->getRepository(ContentIdea::class)->findBy(['id' => array_values(array_unique($ideaIds))]) as $idea) {
+            $ideasById[$idea->getId()] = $idea;
+        }
+
+        $used = ['A' => 0, 'B' => 0];
+        $seenIdeas = [];
+        $resolved = [];
+        foreach ($slots as $slot) {
+            $ideaId = trim((string) ($slot['ideaId'] ?? ''));
             $type = (string) ($slot['type'] ?? '');
             $assignee = (string) ($slot['assignee'] ?? '');
             $minutes = filter_var($slot['estimatedMinutes'] ?? null, FILTER_VALIDATE_INT);
@@ -125,7 +140,7 @@ final class WorkflowController
             if (isset($seenIdeas[$ideaId])) {
                 return $this->error('A content idea can only appear once in a weekly plan.');
             }
-            $idea = $this->entityManager->getRepository(ContentIdea::class)->find($ideaId);
+            $idea = $ideasById[$ideaId] ?? null;
             if (!$idea) {
                 return $this->error(sprintf('Content idea "%s" was not found.', $ideaId), 404);
             }
@@ -193,7 +208,15 @@ final class WorkflowController
         if (!$plan) {
             return $this->error('Weekly plan not found.', 404);
         }
-        $slots = $this->entityManager->getRepository(PlanSlot::class)->findBy(['weeklyPlan' => $plan]);
+        // Fetch-join ideas to avoid lazy-loading one relation for every slot.
+        $slots = $this->entityManager->createQueryBuilder()
+            ->select('slot', 'idea')
+            ->from(PlanSlot::class, 'slot')
+            ->innerJoin('slot.contentIdea', 'idea')
+            ->where('slot.weeklyPlan = :plan')
+            ->setParameter('plan', $plan)
+            ->getQuery()
+            ->getResult();
         $allocated = ['A' => 0, 'B' => 0];
         $items = [];
         foreach ($slots as $slot) {
@@ -410,9 +433,30 @@ final class WorkflowController
         } catch (UniqueConstraintViolationException) {
             $connection->rollBack();
 
-            // A concurrent request may have inserted this idempotency key after
-            // our initial lookup. The caller can safely retry with the same key;
-            // the next request will return the persisted handoff as a replay.
+            // A concurrent request may have committed this key after our initial
+            // lookup. Read via DBAL because the failed ORM flush may have affected
+            // the UnitOfWork state for this request.
+            $row = $connection->fetchAssociative(
+                'SELECT id, content_idea_id, payload FROM content_handoffs WHERE idempotency_key = :key',
+                ['key' => $key],
+            );
+            if (is_array($row)) {
+                if ((string) $row['content_idea_id'] !== $id) {
+                    return $this->error('This idempotency key is already used for another content idea.', 409);
+                }
+
+                $replayedPayload = is_array($row['payload'])
+                    ? $row['payload']
+                    : json_decode((string) $row['payload'], true, 512, JSON_THROW_ON_ERROR);
+
+                return new JsonResponse([
+                    'handoffId' => (string) $row['id'],
+                    'idempotentReplay' => true,
+                    'status' => 'handed_off',
+                    'payload' => $replayedPayload,
+                ]);
+            }
+
             return $this->error('This handoff request was already processed. Retry with the same Idempotency-Key to retrieve its result.', 409);
         } catch (\Throwable $exception) {
             $connection->rollBack();

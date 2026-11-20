@@ -143,3 +143,17 @@ Handoff is allowed only after explicit approval of the current brief hash, a com
 - The brief's effort estimate is illustrative; capacity planning uses the per-slot estimates supplied in the weekly-plan request.
 - Media and booking references are placeholders. Human review is required.
 - Handoff is a persisted simulation only. Real social publishing, analytics, ROI and moderation integrations are not implemented.
+
+## Request tracing and database query behavior
+
+Every main HTTP request receives an `X-Request-Id` response header. A valid incoming
+`X-Request-Id` (1–128 letters, digits, dots, underscores, colons or hyphens) is
+preserved; otherwise the backend generates a UUIDv7. The backend writes one JSON
+completion event to the container log with the request ID, route, method, status
+code and duration. Request bodies, authorization headers and query parameters are
+never included in this event.
+
+Weekly-plan creation loads referenced content ideas in one Doctrine query.
+Weekly-plan retrieval fetch-joins plan slots and their ideas to avoid per-slot
+lazy loading. Database unique constraints remain the final concurrency guard
+for duplicate weeks and idempotency keys.
