@@ -14,6 +14,9 @@ return (new PhpCsFixer\Config())
         'declare_strict_types' => true,
         'no_unused_imports' => true,
         'ordered_imports' => ['sort_algorithm' => 'alpha'],
-        'single_line_empty_body' => true,
+        'concat_space' => ['spacing' => 'none'],
+        'phpdoc_separation' => false,
+        'single_line_empty_body' => false,
+        'yoda_style' => false,
     ])
     ->setFinder($finder);
