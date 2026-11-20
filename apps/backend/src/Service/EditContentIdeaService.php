@@ -57,6 +57,31 @@ final class EditContentIdeaService
             }
         }
 
+        $candidate = clone $idea;
+        foreach (self::EDITABLE_FIELDS as $field) {
+            if (!array_key_exists($field, $data)) {
+                continue;
+            }
+
+            match ($field) {
+                'title' => $candidate->setTitle($data[$field]),
+                'topic' => $candidate->setTopic($data[$field]),
+                'targetAudience' => $candidate->setTargetAudience($data[$field]),
+                'tone' => $candidate->setTone($data[$field]),
+                'channels' => $candidate->setChannels($data[$field]),
+            };
+        }
+
+        $violations = $this->validator->validate($candidate);
+        if (count($violations) > 0) {
+            $messages = [];
+            foreach ($violations as $violation) {
+                $messages[] = ['field' => $violation->getPropertyPath(), 'message' => $violation->getMessage()];
+            }
+
+            return WorkflowResult::error('Content idea validation failed.', 422);
+        }
+
         foreach (self::EDITABLE_FIELDS as $field) {
             if (!array_key_exists($field, $data)) {
                 continue;
@@ -69,19 +94,6 @@ final class EditContentIdeaService
                 'tone' => $idea->setTone($data[$field]),
                 'channels' => $idea->setChannels($data[$field]),
             };
-        }
-
-        $violations = $this->validator->validate($idea);
-        if (count($violations) > 0) {
-            $messages = [];
-            foreach ($violations as $violation) {
-                $messages[] = ['field' => $violation->getPropertyPath(), 'message' => $violation->getMessage()];
-            }
-
-            return WorkflowResult::success([
-                'error' => 'Content idea validation failed.',
-                'violations' => $messages,
-            ], 422);
         }
 
         $brief = $this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea]);
