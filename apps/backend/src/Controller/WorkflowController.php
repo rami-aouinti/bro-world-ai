@@ -12,6 +12,7 @@ use App\Service\ContentHandoffService;
 use App\Service\ContentReviewService;
 use App\Service\EditContentIdeaService;
 use App\Service\WeeklyPlanService;
+use App\Workflow\JsonObjectPayload;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -74,7 +75,7 @@ final class WorkflowController
                 'channels' => array_values(array_unique($channels)),
             ]);
         } catch (\RuntimeException $exception) {
-            return $this->error('AI idea generation is temporarily unavailable: ' . $exception->getMessage(), 503);
+            return $this->error('AI idea generation is temporarily unavailable. Please retry later.', 503);
         }
 
         return new JsonResponse($result);
@@ -201,10 +202,9 @@ final class WorkflowController
 
     private function body(Request $request): array|JsonResponse
     {
-        try {
-            $data = $request->toArray();
-        } catch (\Throwable) {
-            return $this->error('Request body must be valid JSON.');
+        $data = JsonObjectPayload::decode($request->getContent());
+        if ($data === false) {
+            return $this->error('Request body must be a valid JSON object.');
         }
 
         return $data;
