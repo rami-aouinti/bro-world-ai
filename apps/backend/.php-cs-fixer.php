@@ -16,6 +16,7 @@ return (new PhpCsFixer\Config())
         'ordered_imports' => ['sort_algorithm' => 'alpha'],
         'concat_space' => ['spacing' => 'none'],
         'phpdoc_separation' => false,
+        'phpdoc_align' => false,
         'single_line_empty_body' => false,
         'yoda_style' => false,
     ])
