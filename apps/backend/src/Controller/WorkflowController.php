@@ -358,6 +358,10 @@ final class WorkflowController
 
     private function findIdea(string $id): ContentIdea|JsonResponse
     {
+        if (!Uuid::isValid($id)) {
+            return $this->error('Content idea not found.', 404);
+        }
+
         $idea = $this->entityManager->getRepository(ContentIdea::class)->find($id);
 
         return $idea ?? $this->error('Content idea not found.', 404);
