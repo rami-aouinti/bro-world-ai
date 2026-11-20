@@ -11,6 +11,7 @@ use App\Enum\ContentIdeaStatus;
 use App\Workflow\WorkflowResult;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Uid\Uuid;
 
 final class WeeklyPlanService
 {
