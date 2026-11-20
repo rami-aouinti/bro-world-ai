@@ -14,6 +14,8 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class EditContentIdeaService
 {
+    private const EDITABLE_FIELDS = ['title', 'topic', 'targetAudience', 'tone', 'channels'];
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
@@ -27,20 +29,44 @@ final class EditContentIdeaService
             return WorkflowResult::error('Handed-off content is immutable. Create a new content idea.', 409);
         }
 
-        if (array_key_exists('channels', $data) && !is_array($data['channels'])) {
-            return WorkflowResult::error('channels must be an array.');
+        if ($data === []) {
+            return WorkflowResult::error('At least one editable field is required.');
         }
 
-        foreach (['title', 'topic', 'targetAudience', 'tone', 'channels'] as $field) {
+        foreach ($data as $field => $value) {
+            if (!in_array($field, self::EDITABLE_FIELDS, true)) {
+                return WorkflowResult::error(sprintf('Field "%s" cannot be edited.', (string) $field));
+            }
+
+            if ($field === 'channels') {
+                if (!is_array($value) || !array_is_list($value)) {
+                    return WorkflowResult::error('channels must be a list of strings.');
+                }
+
+                foreach ($value as $channel) {
+                    if (!is_string($channel)) {
+                        return WorkflowResult::error('channels must contain only strings.');
+                    }
+                }
+
+                continue;
+            }
+
+            if (!is_string($value)) {
+                return WorkflowResult::error(sprintf('%s must be a string.', $field));
+            }
+        }
+
+        foreach (self::EDITABLE_FIELDS as $field) {
             if (!array_key_exists($field, $data)) {
                 continue;
             }
 
             match ($field) {
-                'title' => $idea->setTitle((string) $data[$field]),
-                'topic' => $idea->setTopic((string) $data[$field]),
-                'targetAudience' => $idea->setTargetAudience((string) $data[$field]),
-                'tone' => $idea->setTone((string) $data[$field]),
+                'title' => $idea->setTitle($data[$field]),
+                'topic' => $idea->setTopic($data[$field]),
+                'targetAudience' => $idea->setTargetAudience($data[$field]),
+                'tone' => $idea->setTone($data[$field]),
                 'channels' => $idea->setChannels($data[$field]),
             };
         }
