@@ -54,6 +54,12 @@ final class WorkflowController
         $campaign = trim($campaign);
         $audience = trim($audience);
         $tone = trim($tone);
+        if (mb_strlen($campaign) > 255 || mb_strlen($audience) > 255 || mb_strlen($tone) > 80) {
+            return $this->error('campaign and audience must be at most 255 characters; tone must be at most 80 characters.');
+        }
+        if (count($channels) > count($allowedChannels)) {
+            return $this->error('Select no more than four channels.');
+        }
         foreach ($channels as $channel) {
             if (!is_string($channel) || !in_array($channel, $allowedChannels, true)) {
                 return $this->error('channels must contain only instagram, facebook, tiktok or linkedin.');
