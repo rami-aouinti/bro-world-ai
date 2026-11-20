@@ -334,6 +334,38 @@ final class WorkflowAcceptanceTest extends WebTestCase
         self::assertSame('draft', $this->ideaStatus($ideaId));
     }
 
+    public function testAt21RejectsTopLevelJsonArrays(): void
+    {
+        $this->client->request(
+            'POST',
+            '/api/workflow/weekly-plans',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'],
+            '[{"weekStart":"2027-01-04"}]',
+        );
+
+        self::assertSame(400, $this->client->getResponse()->getStatusCode());
+        self::assertSame('Request body must be a valid JSON object.', $this->responseData()['error']);
+        self::assertSame('0', $this->countRows('weekly_plans'));
+    }
+
+    public function testAt22RejectsTopLevelJsonScalars(): void
+    {
+        $this->client->request(
+            'POST',
+            '/api/workflow/weekly-plans',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json'],
+            '"not-an-object"',
+        );
+
+        self::assertSame(400, $this->client->getResponse()->getStatusCode());
+        self::assertSame('Request body must be a valid JSON object.', $this->responseData()['error']);
+        self::assertSame('0', $this->countRows('weekly_plans'));
+    }
+
     private function storedIdeaTopic(string $ideaId): string
     {
         /** @var Connection $connection */
