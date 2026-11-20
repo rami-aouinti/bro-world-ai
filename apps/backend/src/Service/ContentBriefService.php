@@ -25,12 +25,20 @@ final class ContentBriefService
             return WorkflowResult::error('Approved or handed-off content must be edited through a new draft version.', 409);
         }
 
-        $mediaReference = trim((string) ($input['mediaReference'] ?? ''));
+        if (!isset($input['mediaReference']) || !is_string($input['mediaReference'])) {
+            return WorkflowResult::error('mediaReference must be a non-empty string.');
+        }
+
+        $mediaReference = trim($input['mediaReference']);
         if ($mediaReference === '') {
             return WorkflowResult::error('mediaReference is required before a brief can be reviewed or handed off.');
         }
 
-        $scheduledAtInput = trim((string) ($input['scheduledAt'] ?? ''));
+        if (!isset($input['scheduledAt']) || !is_string($input['scheduledAt'])) {
+            return WorkflowResult::error('scheduledAt must be a valid date-time string.');
+        }
+
+        $scheduledAtInput = trim($input['scheduledAt']);
         if ($scheduledAtInput === '') {
             return WorkflowResult::error('scheduledAt is required because the schedule is part of the approval snapshot.');
         }
