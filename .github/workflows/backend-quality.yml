@@ -33,6 +33,8 @@ jobs:
         working-directory: apps/backend
     env:
       APP_ENV: test
+      APP_SECRET: backend-quality-test-secret
+      DEFAULT_URI: http://localhost
       DATABASE_URL: "postgresql://app:change-me-local-only@127.0.0.1:5432/bro_world_ai?serverVersion=16&charset=utf8"
     steps:
       - uses: actions/checkout@v4
@@ -48,7 +50,7 @@ jobs:
           restore-keys: ${{ runner.os }}-php-8.4-
       - name: Validate Composer configuration
         run: composer validate --strict
-      - run: composer install --no-interaction --prefer-dist
+      - run: composer install --no-interaction --prefer-dist --no-scripts
       - name: PHP syntax check
         run: find src tests -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Apply database migrations
