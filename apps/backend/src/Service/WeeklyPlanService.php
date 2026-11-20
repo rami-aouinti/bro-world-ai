@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\\Service;
+namespace App\Service;
 
-use App\\Entity\\ContentIdea;
-use App\\Entity\\PlanSlot;
-use App\\Entity\\WeeklyPlan;
-use App\\Enum\\ContentIdeaStatus;
-use App\\Workflow\\WorkflowResult;
-use Doctrine\\DBAL\\Exception\\UniqueConstraintViolationException;
-use Doctrine\\ORM\\EntityManagerInterface;
+use App\Entity\ContentIdea;
+use App\Entity\PlanSlot;
+use App\Entity\WeeklyPlan;
+use App\Enum\ContentIdeaStatus;
+use App\Workflow\WorkflowResult;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\ORM\EntityManagerInterface;
 
 final class WeeklyPlanService
 {
