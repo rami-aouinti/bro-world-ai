@@ -159,3 +159,31 @@ Weekly-plan creation loads referenced content ideas in one Doctrine query.
 Weekly-plan retrieval fetch-joins plan slots and their ideas to avoid per-slot
 lazy loading. Database unique constraints remain the final concurrency guard
 for duplicate weeks and idempotency keys.
+
+## Request contract, validation and error handling
+
+Workflow write endpoints accept a JSON object at the top level. JSON arrays,
+strings, numbers, booleans, null, malformed JSON and empty request bodies are
+rejected with HTTP 400 before application services are called. Nested objects
+and arrays remain available to the existing service-level validators.
+
+Validation is performed at both boundaries:
+- The controller validates endpoint-specific fields such as AI campaign,
+  audience, tone and channel selection.
+- Application services validate workflow invariants, state transitions,
+  identifiers, capacities, media references and idempotency keys.
+- Database unique constraints remain the final guard against duplicate weekly
+  plans and handoffs under concurrent requests.
+
+AI provider failures return a generic HTTP 503 response. Provider status lines
+and exception details are not exposed to API clients. Operational diagnosis
+should use backend and AI-service logs.
+
+## Security status and production boundary
+
+This repository is a local prototype. The Symfony firewall currently has no
+configured production identity provider or route-level access-control rules.
+Consequently, workflow endpoints must not be exposed to the public internet or
+used with real customer data until authentication, authorization, tenant
+isolation, rate limiting and secret management are implemented and tested.
+The in-memory Symfony user provider is not a production identity store.
