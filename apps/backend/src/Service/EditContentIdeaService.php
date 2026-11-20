@@ -74,11 +74,6 @@ final class EditContentIdeaService
 
         $violations = $this->validator->validate($candidate);
         if (count($violations) > 0) {
-            $messages = [];
-            foreach ($violations as $violation) {
-                $messages[] = ['field' => $violation->getPropertyPath(), 'message' => $violation->getMessage()];
-            }
-
             return WorkflowResult::error('Content idea validation failed.', 422);
         }
 
