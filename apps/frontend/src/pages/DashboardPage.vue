@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import { useWorkspace } from '../composables/useWorkspace'
 import MetricCard from '../components/ui/MetricCard.vue'
-import IdeaCard from '../components/ideas/IdeaCard.vue'
 import StatusBadge from '../components/ui/StatusBadge.vue'
 const { state, draftCount, reviewQueue, openIdea } = useWorkspace()
 const router = useRouter()
