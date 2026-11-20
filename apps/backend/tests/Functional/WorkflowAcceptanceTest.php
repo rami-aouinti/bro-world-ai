@@ -399,6 +399,35 @@ final class WorkflowAcceptanceTest extends WebTestCase
         self::assertSame('0', $this->countRows('content_ideas'));
     }
 
+    public function testAt19RejectsOverlongBriefMediaReferences(): void
+    {
+        $ideaId = $this->createIdeas(1)[0];
+
+        $this->postJson('/api/workflow/content-ideas/'.$ideaId.'/brief', [
+            'mediaReference' => str_repeat('x', 2049),
+            'scheduledAt' => '2027-01-05T10:00:00+01:00',
+        ]);
+
+        self::assertSame(400, $this->client->getResponse()->getStatusCode());
+        self::assertSame('0', $this->countRows('content_briefs'));
+    }
+
+    public function testAt20RejectsInvalidIdempotencyKeyCharacters(): void
+    {
+        $ideaId = $this->createIdeas(1)[0];
+
+        $this->client->request(
+            'POST',
+            '/api/workflow/content-ideas/'.$ideaId.'/handoff',
+            [],
+            [],
+            ['HTTP_IDEMPOTENCY_KEY' => 'invalid key with spaces'],
+        );
+
+        self::assertSame(400, $this->client->getResponse()->getStatusCode());
+        self::assertSame('0', $this->countRows('content_handoffs'));
+    }
+
     /**
      * @return list<string>
      */
