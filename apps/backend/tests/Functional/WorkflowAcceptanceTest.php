@@ -145,6 +145,32 @@ final class WorkflowAcceptanceTest extends WebTestCase
         self::assertSame('0', $this->countRows('content_briefs'));
     }
 
+    public function testAt04bRejectsNonStringBriefInputs(): void
+    {
+        $ideaId = $this->createIdeas(1)[0];
+
+        $this->postJson('/api/workflow/content-ideas/'.$ideaId.'/brief', [
+            'mediaReference' => ['not' => 'a string'],
+            'scheduledAt' => '2027-01-05T10:00:00+01:00',
+        ]);
+
+        self::assertSame(400, $this->client->getResponse()->getStatusCode());
+        self::assertSame('0', $this->countRows('content_briefs'));
+    }
+
+    public function testAt04cRejectsNonStringScheduledAt(): void
+    {
+        $ideaId = $this->createIdeas(1)[0];
+
+        $this->postJson('/api/workflow/content-ideas/'.$ideaId.'/brief', [
+            'mediaReference' => 'synthetic://acceptance-test/product-image',
+            'scheduledAt' => ['date' => '2027-01-05'],
+        ]);
+
+        self::assertSame(400, $this->client->getResponse()->getStatusCode());
+        self::assertSame('0', $this->countRows('content_briefs'));
+    }
+
     public function testAt05RejectsReviewWithoutBriefAndPlanAssignment(): void
     {
         $ideaId = $this->createIdeas(1)[0];
