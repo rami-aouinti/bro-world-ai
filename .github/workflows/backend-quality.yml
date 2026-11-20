@@ -14,9 +14,26 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: bro_world_ai
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: change-me-local-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app -d bro_world_ai"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: apps/backend
+    env:
+      APP_ENV: test
+      DATABASE_URL: "postgresql://app:change-me-local-only@127.0.0.1:5432/bro_world_ai?serverVersion=16&charset=utf8"
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -29,10 +46,12 @@ jobs:
           path: apps/backend/vendor
           key: ${{ runner.os }}-php-8.4-${{ hashFiles('apps/backend/composer.lock') }}
           restore-keys: ${{ runner.os }}-php-8.4-
+      - name: Validate Composer configuration
+        run: composer validate --strict
       - run: composer install --no-interaction --prefer-dist
       - name: PHP syntax check
         run: find src tests -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Apply database migrations
+        run: php bin/console doctrine:migrations:migrate --no-interaction
       - name: PHPUnit
-        env:
-          APP_ENV: test
         run: vendor/bin/phpunit --testdox
