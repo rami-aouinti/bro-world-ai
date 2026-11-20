@@ -12,6 +12,7 @@ use App\Entity\PlanSlot;
 use App\Entity\WeeklyPlan;
 use App\Enum\ContentIdeaStatus;
 use App\Service\AiBriefGenerator;
+use App\Service\ContentReviewService;
 use App\Service\WeeklyPlanService;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,6 +30,7 @@ final class WorkflowController
         private readonly ValidatorInterface $validator,
         private readonly AiBriefGenerator $aiBriefGenerator,
         private readonly WeeklyPlanService $weeklyPlanService,
+        private readonly ContentReviewService $contentReviewService,
     ) {
     }
 
@@ -68,7 +70,6 @@ final class WorkflowController
         return new JsonResponse($result);
     }
 
-    #[Route('/weekly-plans', name: 'workflow_create_weekly_plan', methods: ['POST'])]
     #[Route('/weekly-plans', name: 'workflow_create_weekly_plan', methods: ['POST'])]
     public function createWeeklyPlan(Request $request): JsonResponse
     {
@@ -191,44 +192,26 @@ final class WorkflowController
     public function submitReview(string $id): JsonResponse
     {
         $idea = $this->findIdea($id);
-        if ($idea instanceof JsonResponse) { return $idea; }
-        if (!$this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea])) {
-            return $this->error('A complete brief with a media reference and schedule is required before review.');
+        if ($idea instanceof JsonResponse) {
+            return $idea;
         }
-        if (!$this->entityManager->getRepository(PlanSlot::class)->findOneBy(['contentIdea' => $idea])) {
-            return $this->error('Content must be assigned to a weekly plan before review.');
-        }
-        if (!in_array($idea->getStatus(), [ContentIdeaStatus::Draft, ContentIdeaStatus::ReadyForPlanning], true)) {
-            return $this->error('Only draft or planned content can enter review.', 409);
-        }
-        $idea->setStatus(ContentIdeaStatus::Review);
-        $this->entityManager->flush();
 
-        return new JsonResponse(['ideaId' => $id, 'status' => $idea->getStatus()->value]);
+        $result = $this->contentReviewService->submitForReview($idea);
+
+        return new JsonResponse($result->body, $result->statusCode);
     }
 
     #[Route('/content-ideas/{id}/approve', name: 'workflow_approve', methods: ['POST'])]
     public function approve(string $id): JsonResponse
     {
         $idea = $this->findIdea($id);
-        if ($idea instanceof JsonResponse) { return $idea; }
-        if ($idea->getStatus() !== ContentIdeaStatus::Review) {
-            return $this->error('Only content in review can be approved.', 409);
+        if ($idea instanceof JsonResponse) {
+            return $idea;
         }
-        $brief = $this->entityManager->getRepository(ContentBrief::class)->findOneBy(['contentIdea' => $idea]);
-        if (!$brief) {
-            return $this->error('The reviewed brief no longer exists.', 409);
-        }
-        $approval = $this->entityManager->getRepository(ContentApproval::class)->findOneBy(['contentIdea' => $idea]);
-        if ($approval) {
-            $this->entityManager->remove($approval);
-        }
-        $approval = new ContentApproval($idea, $brief->getVersionHash());
-        $this->entityManager->persist($approval);
-        $idea->setStatus(ContentIdeaStatus::Approved);
-        $this->entityManager->flush();
 
-        return new JsonResponse(['ideaId' => $id, 'status' => $idea->getStatus()->value, 'approvedVersionHash' => $approval->getVersionHash(), 'approvedAt' => $approval->getApprovedAt()->format(DATE_ATOM)]);
+        $result = $this->contentReviewService->approve($idea);
+
+        return new JsonResponse($result->body, $result->statusCode);
     }
 
     #[Route('/content-ideas/{id}/handoff', name: 'workflow_handoff', methods: ['POST'])]
