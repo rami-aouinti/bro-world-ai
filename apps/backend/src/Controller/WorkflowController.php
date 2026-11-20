@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Dto\CreateWeeklyPlanInput;
+use App\Dto\EditContentIdeaInput;
+use App\Dto\GenerateBriefInput;
+use App\Dto\GenerateIdeasInput;
 use App\Entity\ContentBrief;
 use App\Entity\ContentIdea;
 use App\Service\AiBriefGenerator;
@@ -18,6 +22,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/workflow')]
 final class WorkflowController
@@ -30,6 +35,7 @@ final class WorkflowController
         private readonly ContentBriefService $contentBriefService,
         private readonly EditContentIdeaService $editContentIdeaService,
         private readonly ContentHandoffService $contentHandoffService,
+        private readonly ValidatorInterface $validator,
     ) {
     }
 
@@ -41,38 +47,15 @@ final class WorkflowController
             return $data;
         }
 
-        $campaign = $data['campaign'] ?? null;
-        $audience = $data['audience'] ?? null;
-        $tone = $data['tone'] ?? 'friendly and helpful';
-        $channels = $data['channels'] ?? ['instagram', 'facebook'];
-        $allowedChannels = ['instagram', 'facebook', 'tiktok', 'linkedin'];
-        if (!is_string($campaign) || trim($campaign) === ''
-            || !is_string($audience) || trim($audience) === ''
-            || !is_string($tone) || trim($tone) === ''
-            || !is_array($channels) || !array_is_list($channels) || $channels === []) {
-            return $this->error('campaign, audience, tone and a non-empty channel list are required with valid types.');
-        }
-        $campaign = trim($campaign);
-        $audience = trim($audience);
-        $tone = trim($tone);
-        if (strlen($campaign) > 255 || strlen($audience) > 255 || strlen($tone) > 80) {
-            return $this->error('campaign and audience must be at most 255 characters; tone must be at most 80 characters.');
-        }
-        if (count($channels) > count($allowedChannels)) {
-            return $this->error('Select no more than four channels.');
-        }
-        foreach ($channels as $channel) {
-            if (!is_string($channel) || !in_array($channel, $allowedChannels, true)) {
-                return $this->error('channels must contain only instagram, facebook, tiktok or linkedin.');
-            }
+        $input = GenerateIdeasInput::fromArray($data);
+        $invalid = $this->validateDto($input);
+        if ($invalid instanceof JsonResponse) {
+            return $invalid;
         }
 
         try {
             $result = $this->aiBriefGenerator->generateIdeas([
-                'campaign' => $campaign,
-                'audience' => $audience,
-                'tone' => $tone,
-                'channels' => array_values(array_unique($channels)),
+                ...$input->toArray(),
             ]);
         } catch (\RuntimeException $exception) {
             return $this->error('AI idea generation is temporarily unavailable. Please retry later.', 503);
@@ -89,7 +72,13 @@ final class WorkflowController
             return $data;
         }
 
-        $result = $this->weeklyPlanService->create($data);
+        $input = CreateWeeklyPlanInput::fromArray($data);
+        $invalid = $this->validateDto($input);
+        if ($invalid instanceof JsonResponse) {
+            return $invalid;
+        }
+
+        $result = $this->weeklyPlanService->create($input->toArray());
 
         return new JsonResponse($result->body, $result->statusCode);
     }
@@ -115,7 +104,13 @@ final class WorkflowController
             return $data;
         }
 
-        $result = $this->contentBriefService->generate($idea, $data);
+        $input = GenerateBriefInput::fromArray($data);
+        $invalid = $this->validateDto($input);
+        if ($invalid instanceof JsonResponse) {
+            return $invalid;
+        }
+
+        $result = $this->contentBriefService->generate($idea, $input->toArray());
 
         return new JsonResponse($result->body, $result->statusCode);
     }
@@ -184,7 +179,13 @@ final class WorkflowController
             return $data;
         }
 
-        $result = $this->editContentIdeaService->edit($idea, $data);
+        $input = EditContentIdeaInput::fromArray($data);
+        $invalid = $this->validateDto($input);
+        if ($invalid instanceof JsonResponse) {
+            return $invalid;
+        }
+
+        $result = $this->editContentIdeaService->edit($idea, $input->toArray());
 
         return new JsonResponse($result->body, $result->statusCode);
     }
@@ -208,6 +209,27 @@ final class WorkflowController
         }
 
         return $data;
+    }
+
+    private function validateDto(object $input): ?JsonResponse
+    {
+        $violations = $this->validator->validate($input);
+        if (count($violations) === 0) {
+            return null;
+        }
+
+        $details = [];
+        foreach ($violations as $violation) {
+            $details[] = [
+                'field' => $violation->getPropertyPath(),
+                'message' => $violation->getMessage(),
+            ];
+        }
+
+        return new JsonResponse([
+            'error' => 'Invalid request payload.',
+            'violations' => $details,
+        ], 400);
     }
 
     private function error(string $message, int $status = 400): JsonResponse
