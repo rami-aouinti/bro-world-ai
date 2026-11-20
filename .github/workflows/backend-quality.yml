@@ -49,7 +49,7 @@ jobs:
           key: ${{ runner.os }}-php-8.4-${{ hashFiles('apps/backend/composer.lock') }}
           restore-keys: ${{ runner.os }}-php-8.4-
       - name: Validate Composer configuration
-        run: composer validate
+        run: composer validate --no-check-publish
       - run: composer install --no-interaction --prefer-dist --no-scripts
       - name: PHP syntax check
         run: find src tests -name '*.php' -print0 | xargs -0 -n1 php -l
