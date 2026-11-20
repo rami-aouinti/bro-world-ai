@@ -1,0 +1,22 @@
+:root {
+  font-family: 'DM Sans', sans-serif;
+  color: #202a32;
+  background: #f6f7f5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --ink: #202a32;
+  --muted: #78847f;
+  --subtle: #a0aaa4;
+  --line: #e7ebe7;
+  --surface: #fff;
+  --canvas: #f6f7f5;
+  --green: #376d53;
+  --green-dark: #28543e;
+  --green-soft: #edf5ef;
+  --mint: #dceee1;
+  --blue-soft: #edf3f8;
+  --amber-soft: #fbf3e7;
+  --violet-soft: #f2eff9;
+  --shadow: 0 12px 36px rgba(32, 48, 39, .055);
+  --radius: 18px;
+}
