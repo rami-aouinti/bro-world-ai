@@ -147,15 +147,27 @@ final class WorkflowController
             return new JsonResponse(['error' => 'Capacity exceeded. Re-plan or increase capacity explicitly.', 'capacityWarnings' => $overCapacity], 422);
         }
 
-        $plan = new WeeklyPlan($weekStart, $capacityA, $capacityB);
-        $this->entityManager->persist($plan);
-        foreach ($resolved as [$idea, $type, $assignee, $minutes]) {
-            $this->entityManager->persist(new PlanSlot($plan, $idea, $type, $assignee, $minutes));
-            if ($idea->getStatus() === ContentIdeaStatus::Draft) {
-                $idea->setStatus(ContentIdeaStatus::ReadyForPlanning);
+        $connection = $this->entityManager->getConnection();
+        $connection->beginTransaction();
+        try {
+            $plan = new WeeklyPlan($weekStart, $capacityA, $capacityB);
+            $this->entityManager->persist($plan);
+            foreach ($resolved as [$idea, $type, $assignee, $minutes]) {
+                $this->entityManager->persist(new PlanSlot($plan, $idea, $type, $assignee, $minutes));
+                if ($idea->getStatus() === ContentIdeaStatus::Draft) {
+                    $idea->setStatus(ContentIdeaStatus::ReadyForPlanning);
+                }
             }
+            $this->entityManager->flush();
+            $connection->commit();
+        } catch (UniqueConstraintViolationException) {
+            $connection->rollBack();
+
+            return $this->error('A weekly plan already exists for this weekStart.', 409);
+        } catch (\\Throwable $exception) {
+            $connection->rollBack();
+            throw $exception;
         }
-        $this->entityManager->flush();
 
         return new JsonResponse([
             'id' => $plan->getId(),
