@@ -33,6 +33,9 @@ final class ContentBriefService
         if ($mediaReference === '') {
             return WorkflowResult::error('mediaReference is required before a brief can be reviewed or handed off.');
         }
+        if (strlen($mediaReference) > 2048) {
+            return WorkflowResult::error('mediaReference must not exceed 2048 characters.');
+        }
 
         if (!isset($input['scheduledAt']) || !is_string($input['scheduledAt'])) {
             return WorkflowResult::error('scheduledAt must be a valid date-time string.');
@@ -41,6 +44,9 @@ final class ContentBriefService
         $scheduledAtInput = trim($input['scheduledAt']);
         if ($scheduledAtInput === '') {
             return WorkflowResult::error('scheduledAt is required because the schedule is part of the approval snapshot.');
+        }
+        if (strlen($scheduledAtInput) > 64) {
+            return WorkflowResult::error('scheduledAt must not exceed 64 characters.');
         }
 
         try {
