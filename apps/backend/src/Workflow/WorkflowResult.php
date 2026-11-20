@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Workflow;
 
+/**
+ * Transport-neutral result shared by workflow application services and HTTP controllers.
+ */
 final readonly class WorkflowResult
 {
     /**
