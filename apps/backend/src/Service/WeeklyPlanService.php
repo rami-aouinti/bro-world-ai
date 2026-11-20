@@ -53,7 +53,9 @@ final class WeeklyPlanService
 
         $existing = $this->entityManager->getRepository(WeeklyPlan::class)->findOneBy(['weekStart' => $weekStart->setTime(0, 0)]);
         if ($existing) {
-            return WorkflowResult::error('A weekly plan already exists for this weekStart.', 409);
+            // A retry for the same week is a safe replay: return the persisted plan
+            // instead of failing with 409 or creating duplicate slots.
+            return $this->buildPlanResult($existing, true);
         }
 
         $ideaIds = [];
@@ -159,6 +161,12 @@ final class WeeklyPlanService
         if (!$plan) {
             return WorkflowResult::error('Weekly plan not found.', 404);
         }
+
+        return $this->buildPlanResult($plan);
+    }
+
+    private function buildPlanResult(WeeklyPlan $plan, bool $idempotentReplay = false): WorkflowResult
+    {
         // Fetch-join ideas to avoid lazy-loading one relation for every slot.
         $slots = $this->entityManager->createQueryBuilder()
             ->select('slot', 'idea')
@@ -168,6 +176,7 @@ final class WeeklyPlanService
             ->setParameter('plan', $plan)
             ->getQuery()
             ->getResult();
+
         $allocated = ['A' => 0, 'B' => 0];
         $items = [];
         foreach ($slots as $slot) {
@@ -181,14 +190,23 @@ final class WeeklyPlanService
             ];
         }
 
-        return WorkflowResult::success([
+        $body = [
             'id' => $plan->getId(),
             'weekStart' => $plan->getWeekStart()->format('Y-m-d'),
             'status' => $plan->getStatus(),
             'capacity' => ['A' => $plan->getCapacityPersonA(), 'B' => $plan->getCapacityPersonB()],
             'allocatedMinutes' => $allocated,
-            'remainingMinutes' => ['A' => $plan->getCapacityPersonA() - $allocated['A'], 'B' => $plan->getCapacityPersonB() - $allocated['B']],
+            'remainingMinutes' => [
+                'A' => $plan->getCapacityPersonA() - $allocated['A'],
+                'B' => $plan->getCapacityPersonB() - $allocated['B'],
+            ],
             'slots' => $items,
-        ]);
+        ];
+
+        if ($idempotentReplay) {
+            $body['idempotentReplay'] = true;
+        }
+
+        return WorkflowResult::success($body);
     }
 }
