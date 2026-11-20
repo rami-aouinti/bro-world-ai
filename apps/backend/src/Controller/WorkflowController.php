@@ -40,14 +40,20 @@ final class WorkflowController
             return $data;
         }
 
-        $campaign = trim((string) ($data['campaign'] ?? ''));
-        $audience = trim((string) ($data['audience'] ?? ''));
-        $tone = trim((string) ($data['tone'] ?? 'friendly and helpful'));
+        $campaign = $data['campaign'] ?? null;
+        $audience = $data['audience'] ?? null;
+        $tone = $data['tone'] ?? 'friendly and helpful';
         $channels = $data['channels'] ?? ['instagram', 'facebook'];
         $allowedChannels = ['instagram', 'facebook', 'tiktok', 'linkedin'];
-        if ($campaign === '' || $audience === '' || !is_array($channels) || $channels === []) {
-            return $this->error('campaign, audience and at least one channel are required.');
+        if (!is_string($campaign) || trim($campaign) === ''
+            || !is_string($audience) || trim($audience) === ''
+            || !is_string($tone) || trim($tone) === ''
+            || !is_array($channels) || !array_is_list($channels) || $channels === []) {
+            return $this->error('campaign, audience, tone and a non-empty channel list are required with valid types.');
         }
+        $campaign = trim($campaign);
+        $audience = trim($audience);
+        $tone = trim($tone);
         foreach ($channels as $channel) {
             if (!is_string($channel) || !in_array($channel, $allowedChannels, true)) {
                 return $this->error('channels must contain only instagram, facebook, tiktok or linkedin.');
