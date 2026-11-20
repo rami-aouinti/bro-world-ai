@@ -12,6 +12,7 @@ use App\Entity\PlanSlot;
 use App\Entity\WeeklyPlan;
 use App\Enum\ContentIdeaStatus;
 use App\Service\AiBriefGenerator;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -164,7 +165,7 @@ final class WorkflowController
             $connection->rollBack();
 
             return $this->error('A weekly plan already exists for this weekStart.', 409);
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             $connection->rollBack();
             throw $exception;
         }
@@ -413,7 +414,7 @@ final class WorkflowController
             // our initial lookup. The caller can safely retry with the same key;
             // the next request will return the persisted handoff as a replay.
             return $this->error('This handoff request was already processed. Retry with the same Idempotency-Key to retrieve its result.', 409);
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             $connection->rollBack();
             throw $exception;
         }
