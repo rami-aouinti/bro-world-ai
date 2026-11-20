@@ -58,4 +58,4 @@ docker compose exec -e APP_ENV=test -e TEST_TOKEN=1 backend vendor/bin/phpunit -
 docker compose exec ai-service pytest -q
 ```
 
-The previously verified backend baseline was 13 tests / 97 assertions. Re-run the commands after pulling latest master; new AI/RAG code has not yet been executed in the local Docker environment.
+GitHub Actions validates Composer configuration, PHP syntax, database migrations and the backend PHPUnit suite on every backend change. Check the repository Actions tab for the exact result of the latest commit. The FastAPI/AI and RAG tests are separate from this backend workflow and should be run with the commands above after pulling latest master.
