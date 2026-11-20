@@ -36,21 +36,8 @@ final class AiBriefGenerator
             'useKnowledgeBase' => true,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 
-        $context = stream_context_create([
-            'http' => [
-                'method' => 'POST',
-                'header' => "Content-Type: application/json\r\nAccept: application/json\r\n",
-                'content' => $body,
-                'timeout' => 120,
-                'ignore_errors' => true,
-            ],
-        ]);
+        $response = $this->postJson('/api/v1/brief', $body, 'AI service request failed');
 
-        $response = @file_get_contents(rtrim($this->serviceUrl, '/') . '/api/v1/brief', false, $context);
-        $statusLine = $http_response_header[0] ?? '';
-        if ($response === false || !preg_match('/\s2\d\d\s/', $statusLine)) {
-            throw new \RuntimeException('AI service request failed: ' . ($statusLine !== '' ? $statusLine : 'connection unavailable'));
-        }
 
         try {
             $payload = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
@@ -109,20 +96,9 @@ final class AiBriefGenerator
             'count' => 5,
             'useKnowledgeBase' => true,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
-        $context = stream_context_create([
-            'http' => [
-                'method' => 'POST',
-                'header' => "Content-Type: application/json\r\nAccept: application/json\r\n",
-                'content' => $body,
-                'timeout' => 120,
-                'ignore_errors' => true,
-            ],
-        ]);
-        $response = @file_get_contents(rtrim($this->serviceUrl, '/') . '/api/v1/ideas', false, $context);
-        $statusLine = $http_response_header[0] ?? '';
-        if ($response === false || !preg_match('/\s2\d\d\s/', $statusLine)) {
-            throw new \RuntimeException('AI idea generation failed: ' . ($statusLine !== '' ? $statusLine : 'connection unavailable'));
-        }
+        $response = $this->postJson('/api/v1/ideas', $body, 'AI idea generation failed');
+
+
         try {
             $result = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException $exception) {
@@ -142,6 +118,48 @@ final class AiBriefGenerator
             'ai' => ['provider' => $result['provider'] ?? 'unknown', 'simulated' => (bool) ($result['simulated'] ?? false), 'knowledgeContextCount' => (int) ($result['knowledgeContextCount'] ?? 0)],
             'knowledgeSources' => $result['knowledgeSources'] ?? [],
         ];
+    }
+
+
+    /**
+     * Sends a JSON request to the AI service.
+     *
+     * AI generation is a read-like operation from the backend's perspective, so
+     * transient gateway/service errors can safely be retried once. Invalid
+     * requests and other 4xx responses are never retried.
+     */
+    private function postJson(string $path, string $body, string $failureMessage): string
+    {
+        $url = rtrim($this->serviceUrl, '/') . $path;
+        $lastError = 'connection unavailable';
+
+        for ($attempt = 1; $attempt <= 2; ++$attempt) {
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'POST',
+                    'header' => "Content-Type: application/json\\r\\nAccept: application/json\\r\\n",
+                    'content' => $body,
+                    'timeout' => 300,
+                    'ignore_errors' => true,
+                ],
+            ]);
+
+            $response = @file_get_contents($url, false, $context);
+            $statusLine = $http_response_header[0] ?? '';
+            if ($response !== false && preg_match('/\\s2\\d\\d\\s/', $statusLine)) {
+                return $response;
+            }
+
+            $lastError = $statusLine !== '' ? $statusLine : 'connection unavailable';
+            $retryable = $response === false || preg_match('/\\s(502|503|504)\\s/', $statusLine) === 1;
+            if (!$retryable || $attempt === 2) {
+                break;
+            }
+
+            usleep(250_000);
+        }
+
+        throw new \\RuntimeException($failureMessage . ': ' . $lastError);
     }
 
 }
