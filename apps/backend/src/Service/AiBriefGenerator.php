@@ -137,7 +137,7 @@ final class AiBriefGenerator
             $context = stream_context_create([
                 'http' => [
                     'method' => 'POST',
-                    'header' => "Content-Type: application/json\\r\\nAccept: application/json\\r\\n",
+                    'header' => "Content-Type: application/json\r\nAccept: application/json\r\n",
                     'content' => $body,
                     'timeout' => 300,
                     'ignore_errors' => true,
@@ -146,12 +146,12 @@ final class AiBriefGenerator
 
             $response = @file_get_contents($url, false, $context);
             $statusLine = $http_response_header[0] ?? '';
-            if ($response !== false && preg_match('/\\s2\\d\\d\\s/', $statusLine)) {
+            if ($response !== false && preg_match('/\s2\d\d\s/', $statusLine)) {
                 return $response;
             }
 
             $lastError = $statusLine !== '' ? $statusLine : 'connection unavailable';
-            $retryable = $response === false || preg_match('/\\s(502|503|504)\\s/', $statusLine) === 1;
+            $retryable = $response === false || preg_match('/\s(502|503|504)\s/', $statusLine) === 1;
             if (!$retryable || $attempt === 2) {
                 break;
             }
@@ -159,7 +159,7 @@ final class AiBriefGenerator
             usleep(250_000);
         }
 
-        throw new \\RuntimeException($failureMessage . ': ' . $lastError);
+        throw new \RuntimeException($failureMessage . ': ' . $lastError);
     }
 
 }
