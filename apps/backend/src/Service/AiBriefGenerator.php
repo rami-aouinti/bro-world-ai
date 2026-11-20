@@ -133,7 +133,7 @@ final class AiBriefGenerator
      */
     private function postJson(string $path, array $payload, string $failureMessage): array
     {
-        $url = rtrim($this->serviceUrl, '/') . $path;
+        $url = rtrim($this->serviceUrl, '/').$path;
         $lastTransportError = null;
 
         for ($attempt = 1; $attempt <= 2; ++$attempt) {
@@ -177,9 +177,6 @@ final class AiBriefGenerator
             }
         }
 
-        throw new \RuntimeException(
-            $failureMessage . ': AI service is unreachable.',
-            previous: $lastTransportError,
-        );
+        throw new \RuntimeException($failureMessage.': AI service is unreachable.', previous: $lastTransportError);
     }
 }
