@@ -77,7 +77,7 @@ final class ContentBriefService
                 'channels' => $channels,
             ], $scheduledAt, $mediaReference);
         } catch (\RuntimeException $exception) {
-            return WorkflowResult::error('AI content generation is temporarily unavailable: ' . $exception->getMessage(), 503);
+            return WorkflowResult::error('AI content generation is temporarily unavailable. Please retry later.', 503);
         }
 
         if ($payload === null) {
