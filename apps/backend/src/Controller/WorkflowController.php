@@ -399,9 +399,24 @@ final class WorkflowController
             'brief' => $brief->getPayload(),
         ];
         $handoff = new ContentHandoff($idea, $key, $brief->getVersionHash(), $payload);
-        $this->entityManager->persist($handoff);
-        $idea->setStatus(ContentIdeaStatus::HandedOff);
-        $this->entityManager->flush();
+        $connection = $this->entityManager->getConnection();
+        $connection->beginTransaction();
+        try {
+            $this->entityManager->persist($handoff);
+            $idea->setStatus(ContentIdeaStatus::HandedOff);
+            $this->entityManager->flush();
+            $connection->commit();
+        } catch (UniqueConstraintViolationException) {
+            $connection->rollBack();
+
+            // A concurrent request may have inserted this idempotency key after
+            // our initial lookup. The caller can safely retry with the same key;
+            // the next request will return the persisted handoff as a replay.
+            return $this->error('This handoff request was already processed. Retry with the same Idempotency-Key to retrieve its result.', 409);
+        } catch (\\Throwable $exception) {
+            $connection->rollBack();
+            throw $exception;
+        }
 
         return new JsonResponse(['handoffId' => $handoff->getId(), 'idempotentReplay' => false, 'status' => 'handed_off', 'payload' => $payload], 201);
     }
