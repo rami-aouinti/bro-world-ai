@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\\Workflow;
+namespace App\Workflow;
 
 /**
  * Decodes a JSON request body while enforcing an object at the top level.
@@ -20,12 +20,12 @@ final class JsonObjectPayload
     {
         try {
             $decoded = json_decode($content, false, 512, JSON_THROW_ON_ERROR);
-            if (!$decoded instanceof \\stdClass) {
+            if (!$decoded instanceof \stdClass) {
                 return false;
             }
 
             $payload = json_decode($content, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\\JsonException) {
+        } catch (\JsonException) {
             return false;
         }
 
