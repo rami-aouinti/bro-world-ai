@@ -28,7 +28,6 @@ final class GenerateIdeasInput
             new Assert\Type('string'),
             new Assert\Choice(choices: ['instagram', 'facebook', 'tiktok', 'linkedin']),
         ])]
-        #[Assert\Callback('validateChannelList')]
         public readonly mixed $channels,
     ) {
     }
@@ -55,6 +54,7 @@ final class GenerateIdeasInput
         ];
     }
 
+    #[Assert\Callback]
     public function validateChannelList(ExecutionContextInterface $context): void
     {
         if (is_array($this->channels) && !array_is_list($this->channels)) {
