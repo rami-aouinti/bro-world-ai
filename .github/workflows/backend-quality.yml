@@ -48,6 +48,8 @@ jobs:
           path: apps/backend/vendor
           key: ${{ runner.os }}-php-8.4-${{ hashFiles('apps/backend/composer.lock') }}
           restore-keys: ${{ runner.os }}-php-8.4-
+      - name: Create test database
+        run: PGPASSWORD=change-me-local-only psql -h 127.0.0.1 -U app -d bro_world_ai -c "CREATE DATABASE bro_world_ai_test OWNER app;"
       - name: Validate Composer configuration
         run: composer validate --no-check-publish
       - run: composer install --no-interaction --prefer-dist --no-scripts
