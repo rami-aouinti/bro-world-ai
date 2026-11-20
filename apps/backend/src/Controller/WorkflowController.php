@@ -54,7 +54,7 @@ final class WorkflowController
         $campaign = trim($campaign);
         $audience = trim($audience);
         $tone = trim($tone);
-        if (mb_strlen($campaign) > 255 || mb_strlen($audience) > 255 || mb_strlen($tone) > 80) {
+        if (strlen($campaign) > 255 || strlen($audience) > 255 || strlen($tone) > 80) {
             return $this->error('campaign and audience must be at most 255 characters; tone must be at most 80 characters.');
         }
         if (count($channels) > count($allowedChannels)) {
