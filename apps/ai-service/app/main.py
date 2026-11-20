@@ -98,7 +98,7 @@ def _mock_embedding(value: str) -> list[float]:
 
 async def _ollama_generate(prompt: str) -> str:
     try:
-        async with httpx.AsyncClient(timeout=120) as client:
+        async with httpx.AsyncClient(timeout=300) as client:
             response = await client.post(
                 f"{settings.ollama_base_url.rstrip('/')}/api/generate",
                 json={"model": settings.ollama_model, "prompt": prompt, "stream": False, "format": "json"},
