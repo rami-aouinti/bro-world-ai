@@ -150,6 +150,10 @@ final class WeeklyPlanService
 
         public function get(string $id): WorkflowResult
     {
+        if (!Uuid::isValid($id)) {
+            return WorkflowResult::error('Weekly plan not found.', 404);
+        }
+
         $plan = $this->entityManager->getRepository(WeeklyPlan::class)->find($id);
         if (!$plan) {
             return WorkflowResult::error('Weekly plan not found.', 404);
