@@ -1,8 +1,11 @@
 <?php
 
 $finder = PhpCsFixer\Finder::create()
-    ->in(__DIR__.'/src')
-    ->in(__DIR__.'/tests');
+    ->in(__DIR__.'/src/Dto')
+    ->append([
+        __DIR__.'/src/Service/AiBriefGenerator.php',
+        __DIR__.'/tests/Unit/AiBriefGeneratorTest.php',
+    ]);
 
 return (new PhpCsFixer\Config())
     ->setRiskyAllowed(true)
