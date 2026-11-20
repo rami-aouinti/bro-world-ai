@@ -28,7 +28,6 @@ final class WorkflowController
         private readonly ValidatorInterface $validator,
         private readonly AiBriefGenerator $aiBriefGenerator,
         private readonly WeeklyPlanService $weeklyPlanService,
-        private readonly WeeklyPlanService $weeklyPlanService,
     ) {
     }
 
