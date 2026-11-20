@@ -21,8 +21,8 @@ final class WeeklyPlanService
 
         public function create(array $data): WorkflowResult
     {
-        $weekStartInput = (string) ($data['weekStart'] ?? '');
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $weekStartInput)) {
+        $weekStartInput = $data['weekStart'] ?? null;
+        if (!is_string($weekStartInput) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $weekStartInput)) {
             return WorkflowResult::error('weekStart is required and must use YYYY-MM-DD.');
         }
         $weekStart = \DateTimeImmutable::createFromFormat('!Y-m-d', $weekStartInput);
@@ -35,7 +35,7 @@ final class WeeklyPlanService
         }
 
         $slots = $data['slots'] ?? null;
-        if (!is_array($slots) || count($slots) !== 5) {
+        if (!is_array($slots) || !array_is_list($slots) || count($slots) !== 5) {
             return WorkflowResult::error('A weekly plan must contain exactly five slots: three priority and two reserve.');
         }
 
@@ -63,7 +63,10 @@ final class WeeklyPlanService
             if (!is_array($slot)) {
                 return WorkflowResult::error('Each slot must be an object.');
             }
-            $ideaId = trim((string) ($slot['ideaId'] ?? ''));
+            if (!is_string($slot['ideaId'] ?? null) || trim($slot['ideaId']) === '') {
+                return WorkflowResult::error('Each slot must contain a valid string ideaId.');
+            }
+            $ideaId = trim($slot['ideaId']);
             if ($ideaId === '') {
                 return WorkflowResult::error('Each slot must contain a valid ideaId.');
             }
@@ -80,11 +83,14 @@ final class WeeklyPlanService
         $seenIdeas = [];
         $resolved = [];
         foreach ($slots as $slot) {
-            $ideaId = trim((string) ($slot['ideaId'] ?? ''));
-            $type = (string) ($slot['type'] ?? '');
-            $assignee = (string) ($slot['assignee'] ?? '');
-            $minutes = filter_var($slot['estimatedMinutes'] ?? null, FILTER_VALIDATE_INT);
-            if (!in_array($type, ['priority', 'reserve'], true) || !in_array($assignee, ['A', 'B'], true) || $minutes === false || $minutes < 1) {
+            $ideaId = trim($slot['ideaId']);
+            $type = $slot['type'] ?? null;
+            $assignee = $slot['assignee'] ?? null;
+            $rawMinutes = $slot['estimatedMinutes'] ?? null;
+            $minutes = is_int($rawMinutes) ? $rawMinutes : (is_string($rawMinutes) ? filter_var($rawMinutes, FILTER_VALIDATE_INT) : false);
+            if (!is_string($type) || !in_array($type, ['priority', 'reserve'], true)
+                || !is_string($assignee) || !in_array($assignee, ['A', 'B'], true)
+                || $minutes === false || $minutes < 1) {
                 return WorkflowResult::error('Each slot needs type priority|reserve, assignee A|B and positive estimatedMinutes.');
             }
             if (isset($seenIdeas[$ideaId])) {
