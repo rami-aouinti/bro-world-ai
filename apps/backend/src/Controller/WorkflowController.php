@@ -12,6 +12,7 @@ use App\Entity\PlanSlot;
 use App\Entity\WeeklyPlan;
 use App\Enum\ContentIdeaStatus;
 use App\Service\AiBriefGenerator;
+use App\Service\WeeklyPlanService;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,6 +27,7 @@ final class WorkflowController
         private readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
         private readonly AiBriefGenerator $aiBriefGenerator,
+        private readonly WeeklyPlanService $weeklyPlanService,
         private readonly WeeklyPlanService $weeklyPlanService,
     ) {
     }
