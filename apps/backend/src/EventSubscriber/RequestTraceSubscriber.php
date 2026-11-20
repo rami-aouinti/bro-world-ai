@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\\EventSubscriber;
+namespace App\EventSubscriber;
 
-use Symfony\\Component\\EventDispatcher\\EventSubscriberInterface;
-use Symfony\\Component\\HttpKernel\\Event\\RequestEvent;
-use Symfony\\Component\\HttpKernel\\Event\\ResponseEvent;
-use Symfony\\Component\\HttpKernel\\KernelEvents;
-use Symfony\\Component\\Uid\\Uuid;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Uid\Uuid;
 
 final class RequestTraceSubscriber implements EventSubscriberInterface
 {
