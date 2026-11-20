@@ -22,8 +22,8 @@ final class ContentHandoffService
 
     public function handoff(ContentIdea $idea, string $key): WorkflowResult
     {
-        if ($key === '' || strlen($key) > 128) {
-            return WorkflowResult::error('Provide an Idempotency-Key header (max 128 characters).');
+        if (preg_match('/^[A-Za-z0-9._:-]{1,128}$/', $key) !== 1) {
+            return WorkflowResult::error('Provide a valid Idempotency-Key header using letters, numbers, dot, underscore, colon or hyphen (max 128 characters).');
         }
 
         $existing = $this->entityManager->getRepository(ContentHandoff::class)->findOneBy(['idempotencyKey' => $key]);
