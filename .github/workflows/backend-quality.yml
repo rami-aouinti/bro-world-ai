@@ -53,6 +53,10 @@ jobs:
       - name: Validate Composer configuration
         run: composer validate --no-check-publish
       - run: composer install --no-interaction --prefer-dist --no-scripts
+      - name: PHPStan
+        run: composer analyse
+      - name: PHP CS Fixer
+        run: composer cs:check
       - name: PHP syntax check
         run: find src tests -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Apply database migrations
