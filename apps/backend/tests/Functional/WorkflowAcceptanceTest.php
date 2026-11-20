@@ -276,6 +276,54 @@ final class WorkflowAcceptanceTest extends WebTestCase
         self::assertSame('1', $this->countRows('content_handoffs'));
     }
 
+    public function testAt12RejectsNonStringIdeaFieldsWithoutChangingStoredContent(): void
+    {
+        $ideaId = $this->createIdeas(1)[0];
+
+        $this->patchJson('/api/workflow/content-ideas/'.$ideaId, ['topic' => ['unexpected' => 'array']]);
+
+        self::assertSame(400, $this->client->getResponse()->getStatusCode());
+        self::assertSame('Eyewear topic 1', $this->storedIdeaTopic($ideaId));
+        self::assertSame('draft', $this->ideaStatus($ideaId));
+    }
+
+    public function testAt13RejectsMalformedChannelListsBeforeChangingContent(): void
+    {
+        $ideaId = $this->createIdeas(1)[0];
+
+        $this->patchJson('/api/workflow/content-ideas/'.$ideaId, ['channels' => ['instagram', 42]]);
+
+        self::assertSame(400, $this->client->getResponse()->getStatusCode());
+        self::assertSame('draft', $this->ideaStatus($ideaId));
+        self::assertSame('2', $this->countIdeaChannels($ideaId));
+    }
+
+    public function testAt14RejectsUnknownIdeaFields(): void
+    {
+        $ideaId = $this->createIdeas(1)[0];
+
+        $this->patchJson('/api/workflow/content-ideas/'.$ideaId, ['status' => 'approved']);
+
+        self::assertSame(400, $this->client->getResponse()->getStatusCode());
+        self::assertSame('draft', $this->ideaStatus($ideaId));
+    }
+
+    private function storedIdeaTopic(string $ideaId): string
+    {
+        /** @var Connection $connection */
+        $connection = static::getContainer()->get('doctrine')->getConnection();
+
+        return (string) $connection->fetchOne('SELECT topic FROM content_ideas WHERE id = ?', [$ideaId]);
+    }
+
+    private function countIdeaChannels(string $ideaId): string
+    {
+        /** @var Connection $connection */
+        $connection = static::getContainer()->get('doctrine')->getConnection();
+
+        return (string) $connection->fetchOne("SELECT jsonb_array_length(channels::jsonb) FROM content_ideas WHERE id = ?", [$ideaId]);
+    }
+
     /**
      * @return list<string>
      */
