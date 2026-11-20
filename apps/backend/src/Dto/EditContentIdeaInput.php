@@ -13,7 +13,6 @@ final class EditContentIdeaInput
 
     /** @param array<string, mixed> $changes */
     public function __construct(
-        #[Assert\Callback('validateChanges')]
         public readonly array $changes,
     ) {
     }
@@ -30,6 +29,7 @@ final class EditContentIdeaInput
         return $this->changes;
     }
 
+    #[Assert\Callback]
     public function validateChanges(ExecutionContextInterface $context): void
     {
         if ($this->changes === []) {
