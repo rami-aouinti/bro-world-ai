@@ -70,6 +70,29 @@ final class WorkflowAcceptanceTest extends WebTestCase
         self::assertSame('5', $this->countRows('plan_slots'));
     }
 
+    public function testAt01bWeeklyPlanCreationRetryReturnsTheExistingPlan(): void
+    {
+        $firstIdeas = $this->createIdeas(5);
+        $first = $this->createPlan($firstIdeas);
+        self::assertSame(201, $this->client->getResponse()->getStatusCode());
+
+        // A retried workflow may already have generated another batch of ideas.
+        // The weekly plan endpoint must replay the existing plan without duplicating it.
+        $secondIdeas = $this->createIdeas(5);
+        $this->postJson('/api/workflow/weekly-plans', [
+            'weekStart' => '2027-01-04',
+            'slots' => $this->buildSlots($secondIdeas),
+        ]);
+
+        $replay = $this->responseData();
+        self::assertSame(200, $this->client->getResponse()->getStatusCode());
+        self::assertTrue($replay['idempotentReplay']);
+        self::assertSame($first['id'], $replay['id']);
+        self::assertSame($first['slots'], $replay['slots']);
+        self::assertSame('1', $this->countRows('weekly_plans'));
+        self::assertSame('5', $this->countRows('plan_slots'));
+    }
+
     public function testAt02RejectsAnInvalidPriorityReserveDistribution(): void
     {
         $ideas = $this->createIdeas(5);
