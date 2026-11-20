@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+
 final class AiBriefGenerator
 {
     public function __construct(
+        private readonly HttpClientInterface $httpClient,
         private readonly string $serviceUrl,
         private readonly string $appEnv,
     ) {
@@ -23,7 +27,7 @@ final class AiBriefGenerator
             return null;
         }
 
-        $body = json_encode([
+        $payload = $this->postJson('/api/v1/brief', [
             'ideaId' => $idea['id'],
             'title' => $idea['title'],
             'topic' => $idea['topic'],
@@ -34,28 +38,22 @@ final class AiBriefGenerator
             'mediaReference' => $mediaReference,
             'bookingLink' => 'https://example.invalid/appointment',
             'useKnowledgeBase' => true,
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
-
-        $response = $this->postJson('/api/v1/brief', $body, 'AI service request failed');
-
-
-        try {
-            $payload = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $exception) {
-            throw new \RuntimeException('AI service returned invalid JSON.', previous: $exception);
-        }
+        ], 'AI service request failed');
 
         if (!is_string($payload['hook'] ?? null) || !is_string($payload['masterCopy'] ?? null)) {
             throw new \RuntimeException('AI service response must contain a hook and master copy.');
         }
+
         foreach (['productionPlan', 'visual', 'channelVariants', 'effortMinutes'] as $required) {
             if (!is_array($payload[$required] ?? null)) {
                 throw new \RuntimeException(sprintf('AI service response is missing "%s".', $required));
             }
         }
+
         if (($payload['visual']['mediaReference'] ?? null) !== $mediaReference) {
             throw new \RuntimeException('AI service response did not preserve the supplied media reference.');
         }
+
         foreach ($idea['channels'] as $channel) {
             if (!isset($payload['channelVariants'][$channel])) {
                 throw new \RuntimeException(sprintf('AI service response is missing the "%s" channel variant.', $channel));
@@ -67,7 +65,7 @@ final class AiBriefGenerator
 
     /**
      * @param array{campaign: string, audience: string, tone: string, channels: list<string>} $input
-     * @return array{ideas: list<array<string, mixed>>, ai: array<string, mixed>}
+     * @return array{ideas: list<array<string, mixed>>, ai: array<string, mixed>, knowledgeSources: mixed}
      */
     public function generateIdeas(array $input): array
     {
@@ -85,81 +83,103 @@ final class AiBriefGenerator
                 'channels' => $input['channels'],
             ], $suggestions);
 
-            return ['ideas' => $ideas, 'ai' => ['provider' => 'deterministic-backend-fallback', 'simulated' => true, 'knowledgeContextCount' => 0], 'knowledgeSources' => []];
+            return [
+                'ideas' => $ideas,
+                'ai' => ['provider' => 'deterministic-backend-fallback', 'simulated' => true, 'knowledgeContextCount' => 0],
+                'knowledgeSources' => [],
+            ];
         }
 
-        $body = json_encode([
+        $result = $this->postJson('/api/v1/ideas', [
             'campaign' => $input['campaign'],
             'audience' => $input['audience'],
             'tone' => $input['tone'],
             'channels' => $input['channels'],
             'count' => 5,
             'useKnowledgeBase' => true,
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
-        $response = $this->postJson('/api/v1/ideas', $body, 'AI idea generation failed');
+        ], 'AI idea generation failed');
 
-
-        try {
-            $result = json_decode($response, true, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $exception) {
-            throw new \RuntimeException('AI service returned invalid idea JSON.', previous: $exception);
-        }
         if (!isset($result['ideas']) || !is_array($result['ideas']) || count($result['ideas']) !== 5) {
             throw new \RuntimeException('AI service must return exactly five ideas.');
         }
+
         foreach ($result['ideas'] as $idea) {
-            if (!is_array($idea) || empty($idea['title']) || empty($idea['topic']) || empty($idea['targetAudience']) || empty($idea['tone']) || empty($idea['channels'])) {
+            if (!is_array($idea)
+                || empty($idea['title'])
+                || empty($idea['topic'])
+                || empty($idea['targetAudience'])
+                || empty($idea['tone'])
+                || empty($idea['channels'])) {
                 throw new \RuntimeException('AI service returned an incomplete idea.');
             }
         }
 
         return [
             'ideas' => $result['ideas'],
-            'ai' => ['provider' => $result['provider'] ?? 'unknown', 'simulated' => (bool) ($result['simulated'] ?? false), 'knowledgeContextCount' => (int) ($result['knowledgeContextCount'] ?? 0)],
+            'ai' => [
+                'provider' => $result['provider'] ?? 'unknown',
+                'simulated' => (bool) ($result['simulated'] ?? false),
+                'knowledgeContextCount' => (int) ($result['knowledgeContextCount'] ?? 0),
+            ],
             'knowledgeSources' => $result['knowledgeSources'] ?? [],
         ];
     }
 
-
     /**
-     * Sends a JSON request to the AI service.
+     * Sends a JSON request to the AI service and retries transient failures once.
      *
-     * AI generation is a read-like operation from the backend's perspective, so
-     * transient gateway/service errors can safely be retried once. Invalid
-     * requests and other 4xx responses are never retried.
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
      */
-    private function postJson(string $path, string $body, string $failureMessage): string
+    private function postJson(string $path, array $payload, string $failureMessage): array
     {
         $url = rtrim($this->serviceUrl, '/') . $path;
-        $lastError = 'connection unavailable';
+        $lastTransportError = null;
 
         for ($attempt = 1; $attempt <= 2; ++$attempt) {
-            $context = stream_context_create([
-                'http' => [
-                    'method' => 'POST',
-                    'header' => "Content-Type: application/json\r\nAccept: application/json\r\n",
-                    'content' => $body,
+            try {
+                $response = $this->httpClient->request('POST', $url, [
+                    'json' => $payload,
+                    'headers' => ['Accept' => 'application/json'],
                     'timeout' => 300,
-                    'ignore_errors' => true,
-                ],
-            ]);
+                    'max_duration' => 310,
+                    'max_redirects' => 0,
+                ]);
 
-            $response = @file_get_contents($url, false, $context);
-            $statusLine = $http_response_header[0] ?? '';
-            if ($response !== false && preg_match('/\s2\d\d\s/', $statusLine)) {
-                return $response;
+                $statusCode = $response->getStatusCode();
+                if ($statusCode >= 200 && $statusCode < 300) {
+                    try {
+                        $decoded = json_decode($response->getContent(false), true, 512, JSON_THROW_ON_ERROR);
+                    } catch (\JsonException $exception) {
+                        throw new \RuntimeException('AI service returned invalid JSON.', previous: $exception);
+                    }
+
+                    if (!is_array($decoded)) {
+                        throw new \RuntimeException('AI service response must be a JSON object.');
+                    }
+
+                    return $decoded;
+                }
+
+                $retryable = in_array($statusCode, [502, 503, 504], true);
+                if ($retryable && $attempt === 1) {
+                    usleep(250_000);
+                    continue;
+                }
+
+                throw new \RuntimeException(sprintf('%s (HTTP %d).', $failureMessage, $statusCode));
+            } catch (TransportExceptionInterface $exception) {
+                $lastTransportError = $exception;
+                if ($attempt === 1) {
+                    usleep(250_000);
+                    continue;
+                }
             }
-
-            $lastError = $statusLine !== '' ? $statusLine : 'connection unavailable';
-            $retryable = $response === false || preg_match('/\s(502|503|504)\s/', $statusLine) === 1;
-            if (!$retryable || $attempt === 2) {
-                break;
-            }
-
-            usleep(250_000);
         }
 
-        throw new \RuntimeException($failureMessage . ': ' . $lastError);
+        throw new \RuntimeException(
+            $failureMessage . ': AI service is unreachable.',
+            previous: $lastTransportError,
+        );
     }
-
 }
