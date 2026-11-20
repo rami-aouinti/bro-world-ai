@@ -33,6 +33,8 @@ docker compose exec backend php bin/console doctrine:migrations:migrate --no-int
 docker compose exec backend vendor/bin/phpunit
 ```
 
+The GitHub Actions backend workflow provisions PostgreSQL 16, creates the Doctrine test database, validates Composer configuration, lints PHP sources, applies migrations and runs this suite.
+
 ## 1. Content ideas
 
 Create an idea:
