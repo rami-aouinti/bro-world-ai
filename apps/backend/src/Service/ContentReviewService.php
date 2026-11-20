@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Entity\ContentApproval;
 use App\Entity\ContentBrief;
 use App\Entity\ContentIdea;
+use App\Entity\PlanSlot;
 use App\Enum\ContentIdeaStatus;
 use App\Workflow\WorkflowResult;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,7 +29,7 @@ final class ContentReviewService
             return WorkflowResult::error('A complete brief with a media reference and schedule is required before review.');
         }
 
-        if (!$this->entityManager->getRepository(\App\Entity\PlanSlot::class)->findOneBy(['contentIdea' => $idea])) {
+        if (!$this->entityManager->getRepository(PlanSlot::class)->findOneBy(['contentIdea' => $idea])) {
             return WorkflowResult::error('Content must be assigned to a weekly plan before review.');
         }
 
