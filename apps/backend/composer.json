@@ -79,7 +79,10 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
-        ]
+        ],
+        "analyse": "phpstan analyse --configuration=phpstan.neon --no-progress",
+        "cs:check": "php-cs-fixer fix --dry-run --diff --allow-risky=yes",
+        "cs:fix": "php-cs-fixer fix --allow-risky=yes"
     },
     "conflict": {
         "symfony/symfony": "*"
@@ -91,5 +94,3 @@
         }
     }
 }
-
-
