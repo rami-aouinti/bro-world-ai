@@ -128,6 +128,7 @@ final class WorkflowAcceptanceTest extends WebTestCase
 
         $body = $this->responseData();
         self::assertSame(422, $this->client->getResponse()->getStatusCode());
+        self::assertSame('Capacity exceeded. Re-plan or increase capacity explicitly.', $body['error']);
         self::assertSame(91, $body['capacityWarnings']['A']['plannedMinutes']);
         self::assertSame(90, $body['capacityWarnings']['A']['capacityMinutes']);
         self::assertSame(1, $body['capacityWarnings']['A']['overByMinutes']);
