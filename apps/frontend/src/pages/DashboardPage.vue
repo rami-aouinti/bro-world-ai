@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { RouterLink } from 'vue-router'
 import { useWorkspace } from '../composables/useWorkspace'
 import MetricCard from '../components/ui/MetricCard.vue'
 import IdeaCard from '../components/ideas/IdeaCard.vue'
 import StatusBadge from '../components/ui/StatusBadge.vue'
 const { state, draftCount, reviewQueue, openIdea } = useWorkspace()
+const router = useRouter()
+function openRecent(idea: import('../types').ContentIdea) { void openIdea(idea); void router.push('/review') }
 const priority = computed(() => state.plan?.slots.filter(s=>s.type==='priority').length || 0)
 const reserves = computed(() => state.plan?.slots.filter(s=>s.type==='reserve').length || 0)
 const latest = computed(() => state.ideas.slice(0,3))
@@ -22,7 +25,7 @@ const latest = computed(() => state.ideas.slice(0,3))
     </div>
     <div class="content-columns">
       <section class="panel"><div class="panel-heading"><div><span class="eyebrow">RECENT ACTIVITY</span><h3>Recently added</h3></div><RouterLink to="/ideas" class="text-link">View all ↗</RouterLink></div>
-        <div v-if="latest.length" class="compact-list"><button v-for="idea in latest" :key="idea.id" class="compact-idea" @click="openIdea(idea)"><span class="compact-mark">✳</span><span class="compact-copy"><strong>{{ idea.title }}</strong><small>{{ idea.topic }}</small></span><StatusBadge :status="idea.status"/><span class="chevron">›</span></button></div>
+        <div v-if="latest.length" class="compact-list"><button v-for="idea in latest" :key="idea.id" class="compact-idea" @click="openRecent(idea)"><span class="compact-mark">✳</span><span class="compact-copy"><strong>{{ idea.title }}</strong><small>{{ idea.topic }}</small></span><StatusBadge :status="idea.status"/><span class="chevron">›</span></button></div>
         <div v-else class="empty-state"><span>✳</span><h3>Your idea library is waiting.</h3><p>Generate your first ideas with the AI content studio.</p><RouterLink to="/ideas" class="button button-primary">Open content studio</RouterLink></div>
       </section>
       <section class="panel plan-summary"><div class="panel-heading"><div><span class="eyebrow">WEEKLY PLAN</span><h3>{{ state.plan ? 'Your week is taking shape' : 'Start with a clear plan' }}</h3></div><span class="panel-icon">▦</span></div>
