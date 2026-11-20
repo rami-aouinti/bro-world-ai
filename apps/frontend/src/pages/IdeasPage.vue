@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useWorkspace } from '../composables/useWorkspace'
 import IdeaCard from '../components/ideas/IdeaCard.vue'
 import type { Channel } from '../types'
 const { state, channels, channelLabels, generateIdeas, addSuggestion, createIdea, openIdea } = useWorkspace()
+const router = useRouter()
+function openIdeaDetails(idea: import('../types').ContentIdea) { void openIdea(idea); void router.push('/review') }
 const tab = ref<'library'|'ai'>('ai')
 const search = ref('')
 const showForm = ref(false)
@@ -28,7 +31,7 @@ async function submit(){ const result=await createIdea({...form,channels:[...for
     </section>
     <section v-else class="library-panel">
       <div class="library-toolbar"><label class="search-field"><span>⌕</span><input v-model="search" placeholder="Search titles, topics or audiences…"/></label><span>{{filtered.length}} ideas</span></div>
-      <div v-if="filtered.length" class="idea-grid"><IdeaCard v-for="idea in filtered" :key="idea.id" :idea="idea" @open="openIdea"/></div>
+      <div v-if="filtered.length" class="idea-grid"><IdeaCard v-for="idea in filtered" :key="idea.id" :idea="idea" @open="openIdeaDetails"/></div>
       <div v-else class="empty-state"><span>⌕</span><h3>No ideas found</h3><p>Try another search or generate new suggestions.</p></div>
     </section>
     <div v-if="showForm" class="inline-form-panel"><div class="panel-heading"><div><span class="eyebrow">NEW CONTENT IDEA</span><h3>Give your idea a direction</h3></div><button class="icon-button" @click="showForm=false">×</button></div><form class="form-grid" @submit.prevent="submit"><label class="field"><span>Title</span><input v-model="form.title" required maxlength="160" placeholder="A fresh perspective on frames"/></label><label class="field"><span>Topic</span><input v-model="form.topic" required maxlength="255"/></label><label class="field"><span>Audience</span><input v-model="form.targetAudience" required/></label><label class="field"><span>Tone</span><input v-model="form.tone" required/></label><div class="field full-span"><span>Channels</span><div class="channel-options"><button v-for="c in channels" :key="c" type="button" :class="{selected:form.channels.includes(c)}" @click="toggleForm(c)">{{channelLabels[c]}} <b>{{form.channels.includes(c)?'✓':'+'}}</b></button></div></div><div class="form-actions"><button type="button" class="button button-secondary" @click="showForm=false">Cancel</button><button class="button button-primary" :disabled="state.saving || !form.channels.length">{{state.saving?'Saving…':'Save idea'}}</button></div></form></div>
